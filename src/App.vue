@@ -1,28 +1,53 @@
 <template>
-  <div id="app">
-    <img src="./assets/logo.png">
-    <HelloWorld msg="Welcome to Your Vue.js App"/>
+<div id="app">
+  <v-app id="inspire">
+    <Toolbar v-bind:components="this.components" />
+    <router-view></router-view>
+    <Footer />
+  </v-app>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import { mapGetters } from 'vuex';
+import Toolbar from './components/Toolbar.vue';
+import Footer from './components/Footer.vue';
 
 export default {
   name: 'app',
   components: {
-    HelloWorld
-  }
-}
+    Toolbar,
+    Footer,
+  },
+  data: () => ({
+    components: [
+      {
+        name: 'Front Page',
+        route: '/',
+        auth_only: false,
+      },
+      {
+        name: 'Data Management',
+        route: '/data',
+        auth_only: true,
+      },
+      {
+        name: 'Pipelines Editor',
+        route: '/pipelines',
+        auth_only: true,
+      },
+      {
+        name: 'Processes Manager',
+        route: '/processes',
+        auth_only: true,
+      },
+    ],
+  }),
+  computed: mapGetters('auth', [
+    'isAuthenticated',
+  ]),
+};
 </script>
 
 <style>
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
-}
 </style>
