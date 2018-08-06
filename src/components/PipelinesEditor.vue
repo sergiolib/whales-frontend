@@ -35,7 +35,7 @@
                         <Module scope="features_extractors" scope_name="Features extractors" icon="equalizer" v-if="show_features_extractors"></Module>
                         <Module scope="pre_processing" scope_name="Pre processing" icon="transform" v-if="show_pre_processing"></Module>
                         <Module scope="performance_indicators" scope_name="Performance indicators" icon="art_track" v-if="show_performance_indicators"></Module>
-                        <!--<MachineLearning v-if="show_machine_learning"></MachineLearning>-->
+                        <MachineLearning v-if="show_machine_learning"></MachineLearning>
                     </v-card-text>
                     <v-card-text class="text-xs-right">
                         <button class="btn waves-effect waves-light" :disabled="button_disabled" name="action">Submit</button>
@@ -50,12 +50,14 @@
   import axios from 'axios';
   import {api_url} from "../config";
   import Module from './Module.vue';
+  import MachineLearning from './MachineLearning';
   import 'materialize-css'; // It installs the JS asset only
   import 'materialize-css/dist/css/materialize.min.css';
 
   export default {
     components: {
       Module,
+      MachineLearning,
     },
     data() {
       return {

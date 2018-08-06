@@ -45,7 +45,7 @@
       },
       icon: {
         type: String
-      }
+      },
     },
     created () {
       let url = api_url + this.scope + "/";
