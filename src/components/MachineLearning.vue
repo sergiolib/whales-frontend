@@ -24,11 +24,13 @@
             </li>
             <li class="collection-item" v-if="selected_model !== '' && selected_type !== ''">
                 <v-card>
-                    <v-card-title>Parameters</v-card-title>
+                    <v-card-title><h4>Parameters</h4></v-card-title>
                     <v-card-text v-for="(value, parameter) in elements.filter(elem => elem.description === selected_model)[0].parameters"
                                  :key="parameter">
-                        <input :value="value.value" id="parameter" />
-                        <label for="parameter">{{ parameter }}</label>
+                        <input :value="value.value" :type="param_type(value.type)" :id="parameter" :name="parameter" v-if="value.options === null" />
+                        <v-select :id="parameter" :items="value.options" :name="parameter" v-else-if="value.type === 'str'" :value="value.value" />
+                        <input :value="value.value" type="range" step=1 :min="value.options[0]" :max="value.options[1]" :id="parameter" :name="parameter" v-else-if="value.type === 'int'" />
+                        <label :for="parameter">{{ parameter }}</label>
                     </v-card-text>
                 </v-card>
             </li>
@@ -59,6 +61,14 @@
             withCredentials: true
           },
           url,
+        }
+      },
+      param_type(t) {
+        switch (t) {
+          case "bool":
+            return "checkbox";
+          default:
+            return "text";
         }
       }
     },

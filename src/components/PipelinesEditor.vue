@@ -38,7 +38,7 @@
                         <MachineLearning v-if="show_machine_learning"></MachineLearning>
                     </v-card-text>
                     <v-card-text class="text-xs-right">
-                        <button class="btn waves-effect waves-light" :disabled="button_disabled" name="action">Submit</button>
+                        <button class="btn waves-effect waves-light" name="action">Submit</button>
                     </v-card-text>
                 </form>
             </v-card>
@@ -75,7 +75,7 @@
         users_pipelines: [],
         pipelines_descriptions: [],
         form: [],
-        button_disabled: true,
+        valid_switch: false,
       };
     },
     methods: {
@@ -118,24 +118,24 @@
           let element = this.form[element_id];
           if (["text", "checkbox"].includes(element.type)) {
             addition += `<input `;
-            if (element.id !== null) {
-              addition += `id="${element.id}" `;
+            if (element.label !== undefined) {
+              addition += `id="${element.label}" `;
             }
-            if (element.type !== null) {
+            if (element.type !== undefined) {
               addition += `type="${element.type}" `
             }
-            if (element.class !== null) {
+            if (element.class !== undefined) {
               addition += `class="${element.class}" `
             }
-            if (element.name !== null) {
+            if (element.name !== undefined) {
               addition += `name="${element.name}" `
             }
-            if (element.value !== null) {
+            if (element.value !== undefined) {
               addition += `value="${element.value} "`;
             }
-            addition += ` />`
-            if (element.label !== null) {
-              addition += `<label for="${element.id}">${element.label}</label>`
+            addition += ' />'
+            if (element.label !== undefined) {
+              addition += `<label for="${element.label}">${element.label}</label><br />`
             }
           } else {
             switch (element.type) {
@@ -200,11 +200,9 @@
           "Create new pipeline" === value) {
           this.loaded_pipeline = value;
           this.form_opened = true;
-          this.button_disabled = false;
         } else {
           this.form_opened = false;
           this.loaded_pipeline = '';
-          this.button_disabled = true;
         }
       },
       load_users_pipelines() {

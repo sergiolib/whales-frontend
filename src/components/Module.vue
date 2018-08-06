@@ -49,7 +49,6 @@
     },
     created () {
       let url = api_url + this.scope + "/";
-      console.log(url);
       const options = {
         method: 'GET',
         headers: {
