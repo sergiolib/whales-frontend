@@ -88,7 +88,6 @@
         axios(this.options(api_url + suffix + "/")).catch(error => {
           console.log(error);
         }).then(request => {
-          console.log(suffix, request.data)
           if (request.data.length > 0) {
             this.elements[suffix] = request.data;
             this.element_types.push(suffix)

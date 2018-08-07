@@ -30,10 +30,6 @@
             <v-card>
                 <!-- form in materialize -->
                 <form>
-                    <v-card-text class="text-xs-right">
-                        <input type="button" class="btn waves-effect waves-light" name="save" value="Save" />
-                        <input type="button" class="btn waves-effect waves-light" name="submit" value="Submit" />
-                    </v-card-text>
                     <v-card-text>
                         <h4>{{ pipeline_description }}</h4>
                         <p v-for="i in this.form" :key="i.label" v-if="['str', 'bool', 'int'].includes(i.type)">
@@ -58,6 +54,9 @@
                         <MachineLearning
                                 v-if="this.form.map(elem => elem.label).includes('machine_learning')"
                                 :parameters_data.sync="machine_learning"/>
+                    </v-card-text>
+                    <v-card-text class="text-xs-right">
+                        <input type="button" class="btn waves-effect waves-light" name="submit" value="Submit" />
                     </v-card-text>
                 </form>
             </v-card>
@@ -105,29 +104,94 @@
         pre_processing: [],
         features_extractors: [],
         performance_indicators: [],
-        machine_learning: {}
+        machine_learning: {},
+        actual_json_form: {},
       };
     },
-    computed: {
-      form_json () {
-        return {
-          // input_data: this.input_data.map(df => {
-          //   return {
-          //     file_name: df,
-          //     data_file: "audio",
-          //     formatter: "aif"
-          //   }
-          // }),
-          // input_labels: this.input_labels.map(df => {
-          //   return {
-          //     labels_file: df,
-          //     labels_formatter: "csv"
-          //   }
-          // })
-        }
-      }
-    },
     methods: {
+      form_json: function () {
+        let selected_pipeline = this.pipelines.find(pip => pip.description === this.selected_pipeline);
+        Object.keys(selected_pipeline.parameters).forEach(param => {
+          switch (param) {
+            case "pre_processing":
+              this.actual_json_form["pre_processing"] = this.pre_processing
+                .filter(elem => elem.value === true)
+                .map(elem => {
+                  return {
+                    method: elem.name,
+                    parameters: Object.entries(elem.parameters).reduce(
+                      (params, [p, v]) => {
+                        params[p] = v.value;
+                        return params;
+                      }, {})
+                  }
+                });
+              break;
+            case "features_extractors":
+              this.actual_json_form["features_extractors"] = this.features_extractors
+                .filter(elem => elem.value === true)
+                .map(elem => {
+                  return {
+                    method: elem.name,
+                    parameters: Object.entries(elem.parameters).reduce(
+                      (params, [p, v]) => {
+                        params[p] = v.value;
+                        return params;
+                      }, {})
+                  }
+                });
+              break;
+            case "performance_indicators":
+              this.actual_json_form["performance_indicators"] = this.performance_indicators
+                .filter(elem => elem.value === true)
+                .map(elem => {
+                  return {
+                    method: elem.name,
+                    parameters: Object.entries(elem.parameters).reduce(
+                      (params, [p, v]) => {
+                        params[p] = v.value;
+                        return params;
+                      }, {})
+                  }
+                });
+              break;
+            case "input_data":
+              this.actual_json_form["input_data"] = this.input_data.map(df => {
+                return {
+                  file_name: df,
+                  data_file: "audio",
+                  formatter: df.split('.').slice(-1).pop()
+                }
+              });
+              break;
+            case "input_labels":
+              this.actual_json_form["input_labels"] = this.input_labels.map(lab => {
+                return {
+                  labels_file: lab,
+                  labels_formatter: lab.split('.').slice(-1).pop()
+                }
+              });
+              break;
+            case "machine_learning":
+              try {
+                this.actual_json_form["machine_learning"] = {
+                  method: this.machine_learning.name,
+                  parameters: Object.entries(this.machine_learning.parameters).reduce(
+                    (params, [p, v]) => {
+                      params[p] = v.value;
+                      return params;
+                    }, {})
+                };
+              } catch (e) {
+              }
+              break;
+            default:
+              this.actual_json_form[param] = this.form_data[param];
+              break;
+          }
+        });
+        console.log(this.actual_json_form);
+      },
       reloadForm(value) {
         this.form = [
           {
@@ -137,11 +201,7 @@
           }
         ];
         let selected_pipeline = null;
-        this.pipelines.forEach(pip => {
-          if (pip.description === value) {
-            selected_pipeline = pip
-          }
-        });
+        selected_pipeline = this.pipelines.find(pip => pip.description === value);
         Object.entries(selected_pipeline.parameters).forEach(([parameter_name, parameter]) => {
           this.form_data[parameter_name] = parameter.value;
           this.form.push({
@@ -209,6 +269,7 @@
         });
       },
       save_users_pipelines() {
+        this.debouncedGetFormJson();
         let url = api_url + "user_pipelines/";
         const options = {
           method: 'POST',
@@ -220,7 +281,7 @@
           },
           url,
           data: {
-            form: this.form_json,
+            form: this.actual_json_form,
           }
         };
         axios(options).catch(error => {
@@ -236,8 +297,26 @@
     },
     watch: {
       features_extractors () {
-        this.save_users_pipelines()
+        this.save_users_pipelines();
+      },
+      machine_learning () {
+        this.save_users_pipelines();
+      },
+      pre_processing () {
+        this.save_users_pipelines();
+      },
+      performance_indicators () {
+        this.save_users_pipelines();
+      },
+      input_data () {
+        this.save_users_pipelines();
+      },
+      input_labels () {
+        this.save_users_pipelines();
       }
+    },
+    created () {
+      this.debouncedGetFormJson = lodash.debounce(this.form_json, 500);
     }
   };
 </script>
