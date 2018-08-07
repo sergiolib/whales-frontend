@@ -8,16 +8,24 @@
                 </h4>
             </li>
             <li class="collection-item" v-for="element in elements" :key="element.description">
-                <input type="checkbox" v-model="checked[element.name]" :id="element.name" />
+                <input type="checkbox" v-model="checked[element.name].value" :id="element.name" />
                 <label :for="element.name">{{ element.description }}</label>
 
-                <v-card v-if="Object.keys(element.parameters).length > 0 && checked[element.name]">
+                <v-card v-if="Object.keys(element.parameters).length > 0 && checked[element.name].value">
                     <v-card-title>Parameters</v-card-title>
                     <v-card-text>
-                         <div v-for="parameter in Object.keys(element.parameters)" :key="parameter">
-                            <input :value="element.parameters[parameter].value" />
+                         <p v-for="(value, parameter) in element.parameters" :key="parameter">
+                            <input v-if="value.type === 'int'" type="number" :name="parameter" :id="parameter"
+                                   v-model="checked[element.name].data[parameter]" />
+                            <input v-else-if="value.type === 'float'" type="number" step=0.1 :name="parameter"
+                                   :id="parameter" v-model="checked[element.name].data[parameter]" />
+                            <input v-else-if="value.type === 'bool'" type="checkbox" :value="parameter"
+                                   :name="parameter" :id="parameter" v-model="checked[element.name].data[parameter]" />
+                             <v-select v-else-if="value.options !== null" :items="value.options"
+                                       v-model="checked[element.name].data[parameter]"></v-select>
+                            <input v-else :name="parameter" :id="parameter" v-model="checked[element.name].data[parameter]" />
                             <label :for="parameter">{{ parameter }}</label>
-                         </div>
+                         </p>
                     </v-card-text>
                 </v-card>
             </li>
@@ -46,6 +54,10 @@
       icon: {
         type: String
       },
+      value: {
+        type: Array,
+        default: () => {},
+      }
     },
     created () {
       let url = api_url + this.scope + "/";
@@ -64,9 +76,15 @@
       }).then(request => {
         this.elements = request.data;  // Array
         let checked = {};
-        for (const element_id in this.elements) {
-          checked[this.elements[element_id].name] = false;
-        }
+        this.elements.forEach(element => {
+          checked[element.name] = {
+            value: false,
+            data: {},
+          };
+          Object.entries(element.parameters).forEach(([param_name, param]) => {
+            checked[element.name].data[param_name] = param.value;
+          })
+        })
         this.checked = checked;
       });
     }

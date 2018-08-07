@@ -31,14 +31,30 @@
                 <!-- form in materialize -->
                 <form>
                     <v-card-text>
-                        <div v-html="current_pipeline_form"></div>
-                        <Module scope="features_extractors" scope_name="Features extractors" icon="equalizer" v-if="show_features_extractors"></Module>
-                        <Module scope="pre_processing" scope_name="Pre processing" icon="transform" v-if="show_pre_processing"></Module>
-                        <Module scope="performance_indicators" scope_name="Performance indicators" icon="art_track" v-if="show_performance_indicators"></Module>
-                        <MachineLearning v-if="show_machine_learning"></MachineLearning>
+                        <h4>{{ pipeline_description }}</h4>
+                        <p v-for="i in this.form" :key="i.label" v-if="['str', 'bool', 'int'].includes(i.type)">
+                            <input v-if="i.type === 'str'" :id="i.label" v-model="form_data[i.label]" />
+                            <input type="checkbox" v-else-if="i.type === 'bool'" :id="i.label" v-model="form_data[i.label]" />
+                            <input type="number" v-else-if="i.type === 'int'" :id="i.label" v-model="form_data[i.label]" />
+                            <label :for="i.label">{{ i.label }}</label>
+                        </p>
+                        <DataFilesForm v-if="this.form.map(elem => elem.label).includes('input_data')"></DataFilesForm>
+                        <LabelsFilesForm v-if="this.form.map(elem => elem.label).includes('input_labels')"></LabelsFilesForm>
+                        <Module scope="features_extractors" scope_name="Features extractors" icon="equalizer"
+                                v-if="this.form.map(elem => elem.label).includes('features_extractors')"
+                                v-model="form_data['features_extractors']"></Module>
+                        <Module scope="pre_processing" scope_name="Pre processing" icon="transform"
+                                v-if="this.form.map(elem => elem.label).includes('pre_processing')"
+                                v-model="form_data['pre_processing']"></Module>
+                        <Module scope="performance_indicators" scope_name="Performance indicators" icon="art_track"
+                                v-if="this.form.map(elem => elem.label).includes('performance_indicators')"
+                                v-model="form_data['performance_indicators']"></Module>
+                        <MachineLearning
+                                v-if="this.form.map(elem => elem.label).includes('machine_learning')"></MachineLearning>
                     </v-card-text>
                     <v-card-text class="text-xs-right">
-                        <button class="btn waves-effect waves-light" name="action">Submit</button>
+                        <input type="button" class="btn waves-effect waves-light" name="save" value="Save" />
+                        <input type="button" class="btn waves-effect waves-light" name="submit" value="Submit" />
                     </v-card-text>
                 </form>
             </v-card>
@@ -53,11 +69,15 @@
   import MachineLearning from './MachineLearning';
   import 'materialize-css'; // It installs the JS asset only
   import 'materialize-css/dist/css/materialize.min.css';
+  import DataFilesForm from "./DataFilesForm";
+  import LabelsFilesForm from "./LabelsFilesForm";
 
   export default {
     components: {
       Module,
       MachineLearning,
+      DataFilesForm,
+      LabelsFilesForm,
     },
     data() {
       return {
@@ -65,17 +85,17 @@
         selected_pipeline: '',
         current_pipeline_form: '',
         pipeline_forms: {},
-        show_features_extractors: false,
-        show_pre_processing: false,
-        show_performance_indicators: false,
-        show_machine_learning: false,
+        show_data_files_form: false,
+        show_labels_files_form: false,
         user_pipelines_items: ['Create new pipeline', '---'],
         loaded_pipeline: '',
         form_opened: false,
         users_pipelines: [],
         pipelines_descriptions: [],
+        pipelines_url: "",
         form: [],
-        valid_switch: false,
+        pipeline_description: "",
+        form_data: {},
       };
     },
     methods: {
@@ -83,9 +103,7 @@
         this.form = [
           {
             label: "Pipeline name",
-            type: "text",
-            id: "pname",
-            class: "validate",
+            type: "str",
             value: ""
           }
         ];
@@ -96,69 +114,24 @@
           }
         });
         for (let parameter in selected_pipeline.parameters) {
+          this.form_data[parameter] = selected_pipeline.parameters[parameter].value;
           this.form.push({
             label: parameter,
-            type: this.parse_type(parameter, selected_pipeline.parameters[parameter].type),
+            type: selected_pipeline.parameters[parameter].type,
             value: selected_pipeline.parameters[parameter].value,
           });
         }
 
         // If loaded pipeline, fill form with its values
-        if (this.loaded_pipeline !== "Create new pipeline") {
-        }
-        // Else, create an empty (default parameters) form
-        else {
-          this.create_form(value);
-        }
-      },
-      create_form(pipeline_description) {
-        let addition = "";
-        addition += `<h1>${pipeline_description}</h1><br />`;
-        for (let element_id in this.form) {
-          let element = this.form[element_id];
-          if (["text", "checkbox"].includes(element.type)) {
-            addition += `<input `;
-            if (element.label !== undefined) {
-              addition += `id="${element.label}" `;
-            }
-            if (element.type !== undefined) {
-              addition += `type="${element.type}" `
-            }
-            if (element.class !== undefined) {
-              addition += `class="${element.class}" `
-            }
-            if (element.name !== undefined) {
-              addition += `name="${element.name}" `
-            }
-            if (element.value !== undefined) {
-              addition += `value="${element.value} "`;
-            }
-            addition += ' />'
-            if (element.label !== undefined) {
-              addition += `<label for="${element.label}">${element.label}</label><br />`
-            }
-          } else {
-            switch (element.type) {
-              case "features_extractors":
-                this.show_features_extractors = true;
-                break;
-              case "pre_processing":
-                this.show_pre_processing = true;
-                break;
-              case "performance_indicators":
-                this.show_performance_indicators = true;
-                break;
-              case "machine_learning":
-                this.show_machine_learning = true;
-                break;
-            }
-          }
-        }
-        addition += '<br />';
-        this.current_pipeline_form = addition;
+        // if (this.loaded_pipeline !== "Create new pipeline") {
+        // }
+        // // Else, create an empty (default parameters) form
+        // else {
+        // }
       },
       load_pipelines_types() {
-        let url = api_url + "pipelines/";
+        this.pipelines_url = api_url + "pipelines/";
+        let url = this.pipelines_url;
         const options = {
           method: 'GET',
           headers: {
