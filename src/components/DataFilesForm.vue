@@ -9,7 +9,7 @@
             </li>
             <li>
                 <v-data-table :items="elements" :headers="table_headers"
-                              select-all item-key="name" v-model="selected_elements">
+                              select-all item-key="name" v-model="local_selected">
                     <template slot="items" slot-scope="props">
                         <td>
                             <v-checkbox
@@ -49,9 +49,9 @@
           {
             text: 'Owner',
             value: 'owner',
-          }
+          },
         ],
-        selected_elements: [],
+        local_selected: [],
         alert_message: 'There are no data files available for you',
       };
     },
@@ -89,5 +89,20 @@
         this.elements = elements;
       });
     },
+    props: {
+      selected: {
+        type: Array,
+        required: true,
+      }
+    },
+    watch: {
+      local_selected (data) {
+        let output = [];
+        data.forEach(df => {
+          output.push(df.name);
+        });
+        this.$emit('update:selected', output);
+      }
+    }
   }
 </script>
