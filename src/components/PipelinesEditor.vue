@@ -46,13 +46,15 @@
                                    fab
                                    fixed
                                    bottom
-                                   right v-if="this.saved_state"><v-icon class="text-xs-right">fa-save</v-icon></v-btn>
+                                   right v-if="this.saved_state"
+                                   @click="save_users_pipelines"><v-icon class="text-xs-right">fa-save</v-icon></v-btn>
                             <v-btn color="blue"
                                    dark
                                    fab
                                    fixed
                                    bottom
-                                   right v-else><v-icon class="text-xs-right">fa-hourglass-end</v-icon></v-btn>
+                                   right v-else
+                                   @click="save_users_pipelines"><v-icon class="text-xs-right">fa-hourglass-end</v-icon></v-btn>
                         </v-fab-transition>
                     </v-layout>
                     <p v-for="(param, param_name) in loaded_pipeline.parameters" :key="param_name" v-if="['str', 'bool', 'int'].includes(param.type)">
@@ -93,7 +95,7 @@
   import 'materialize-css'; // It installs the JS asset only
   import 'materialize-css/dist/css/materialize.min.css';
   import FilesForm from "./FilesForm";
-  import lodash from 'lodash';
+  import _ from 'lodash';
 
   const insert = (arr, index, newItem) => [
     // part of the array before the specified index
@@ -146,89 +148,6 @@
           this.selected_pipeline_type = '';
         }
       },
-      form_json: function () {
-        // let selected_pipeline = this.pipelines.find(pip => pip.description === this.selected_pipeline);
-        // Object.keys(selected_pipeline.parameters).forEach(param => {
-        //   switch (param) {
-        //     case "pre_processing":
-        //       this.actual_json_form["pre_processing"] = this.pre_processing
-        //         .filter(elem => elem.value === true)
-        //         .map(elem => {
-        //           return {
-        //             method: elem.name,
-        //             parameters: Object.entries(elem.parameters).reduce(
-        //               (params, [p, v]) => {
-        //                 params[p] = v.value;
-        //                 return params;
-        //               }, {})
-        //           }
-        //         });
-        //       break;
-        //     case "features_extractors":
-        //       this.actual_json_form["features_extractors"] = this.features_extractors
-        //         .filter(elem => elem.value === true)
-        //         .map(elem => {
-        //           return {
-        //             method: elem.name,
-        //             parameters: Object.entries(elem.parameters).reduce(
-        //               (params, [p, v]) => {
-        //                 params[p] = v.value;
-        //                 return params;
-        //               }, {})
-        //           }
-        //         });
-        //       break;
-        //     case "performance_indicators":
-        //       this.actual_json_form["performance_indicators"] = this.performance_indicators
-        //         .filter(elem => elem.value === true)
-        //         .map(elem => {
-        //           return {
-        //             method: elem.name,
-        //             parameters: Object.entries(elem.parameters).reduce(
-        //               (params, [p, v]) => {
-        //                 params[p] = v.value;
-        //                 return params;
-        //               }, {})
-        //           }
-        //         });
-        //       break;
-        //     case "input_data":
-        //       this.actual_json_form["input_data"] = this.input_data.map(df => {
-        //         return {
-        //           file_name: df,
-        //           data_file: "audio",
-        //           formatter: df.split('.').slice(-1).pop()
-        //         }
-        //       });
-        //       break;
-        //     case "input_labels":
-        //       this.actual_json_form["input_labels"] = this.input_labels.map(lab => {
-        //         return {
-        //           labels_file: lab,
-        //           labels_formatter: lab.split('.').slice(-1).pop()
-        //         }
-        //       });
-        //       break;
-        //     case "machine_learning":
-        //       try {
-        //         this.actual_json_form["machine_learning"] = {
-        //           method: this.machine_learning.name,
-        //           parameters: Object.entries(this.machine_learning.parameters).reduce(
-        //             (params, [p, v]) => {
-        //               params[p] = v.value;
-        //               return params;
-        //             }, {})
-        //         };
-        //       } catch (e) {
-        //       }
-        //       break;
-        //     default:
-        //       this.actual_json_form[param] = this.form_data[param];
-        //       break;
-        //   }
-        // });
-        // console.log(this.actual_json_form);
-      },
       load_pipelines_types() {
         let url = api_url + "pipelines/";
         const options = {
@@ -265,8 +184,8 @@
           this.loaded_pipelines = request.data;
         });
       },
-      save_users_pipelines() {
-        this.debouncedGetFormJson();
+      save_users_pipelines: _.debounce(function () {
+        this.saved_state = false;
         let url = api_url + "user_pipelines/";
         const options = {
           method: 'POST',
@@ -286,8 +205,8 @@
           console.log(error);
         }).then(() => {
           this.saved_state = true;
-        });
-      },
+        })}, 500
+        ),
       create_pipeline() {
         let data = {
           new_pipeline_name: this.new_pipeline_name,
@@ -319,7 +238,6 @@
       loaded_pipeline: {
         deep: true,
         handler () {
-          this.saved_state = false;
           if (this.loaded_pipeline === undefined) {
             return;
           }
@@ -330,7 +248,6 @@
       }
     },
     created () {
-      this.debouncedGetFormJson = lodash.debounce(this.form_json, 500);
       this.load_pipelines_types();
       this.load_users_pipelines();
     }
