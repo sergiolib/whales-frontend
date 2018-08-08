@@ -3,7 +3,7 @@
         <ul class="collection with-header">
             <li class="collection-header">
                 <h4>
-                    Data Files
+                    {{ scope_name }}
                     <v-icon large class="right">fa-database</v-icon>
                 </h4>
             </li>
@@ -40,19 +40,6 @@
     data() {
       return {
         elements: [],
-        table_headers: [
-          {
-            value: 'name',
-            text: 'Data file name',
-            align: 'left',
-          },
-          {
-            text: 'Owner',
-            value: 'owner',
-          },
-        ],
-        local_selected: [],
-        alert_message: 'There are no data files available for you',
       };
     },
     methods: {
@@ -78,7 +65,7 @@
       }
     },
     mounted() {
-      let url = api_url + "data_files/";
+      let url = api_url + this.scope + "/";
       axios(this.options(url)).catch(error => {
         console.log(error);
       }).then(request => {
@@ -93,16 +80,45 @@
       selected: {
         type: Array,
         required: true,
+      },
+      scope_name: {
+        type: String,
+        required: true,
+      },
+      scope: {
+        type: String,
+        required: true,
       }
     },
-    watch: {
-      local_selected (data) {
-        let output = [];
-        data.forEach(df => {
-          output.push(df.name);
-        });
-        this.$emit('update:selected', output);
+    computed: {
+      table_headers() {
+        if (this.scope_name === undefined) {
+          return [];
+        }
+        return [{
+          value: 'name',
+          text: this.scope_name + ' name',
+          align: 'left',
+        },
+          {
+            text: 'Owner',
+            value: 'owner',
+          }]
+      },
+      alert_message () {
+        if (this.scope_name === undefined) {
+          return [];
+        }
+        return 'There are no ' + this.scope_name + ' available for you'
+      },
+      local_selected: {
+        get() {
+          return this.selected;
+        },
+        set(val) {
+          this.$emit('update:selected', val);
+        }
       }
-    }
+    },
   }
 </script>

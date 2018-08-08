@@ -9,56 +9,77 @@
             </v-card-text>
             <v-card-text>
                 <v-select
-                        :items="user_pipelines_items"
+                        :items="pipelines_selector_items"
                         box
-                        label="Select create pipeline or select to modify"
-                        @change="open_form"
-                        v_model="loaded_pipeline"
+                        label="Create new pipeline or select to modify"
+                        @change="checkUserLoadedType"
                 ></v-select>
                 <v-select
-                        :items="pipelines_descriptions"
+                        :items="pipelines_types_description"
                         box
                         label="Pipeline Type"
-                        @change="reloadForm"
-                        v-model="selected_pipeline"
-                        :disabled="loaded_pipeline === ''"
+                        v-model="selected_pipeline_type"
+                        :disabled="pipeline_selected !== create_option"
                 ></v-select>
             </v-card-text>
         </v-card>
-        <v-divider></v-divider>
-        <v-flex xs12 sm8 offset-sm2 v-if="form_opened">
+        <v-flex xs12 sm8 offset-sm2 v-if="pipeline_selected === create_option">
+            <v-divider></v-divider>
             <v-card>
-                <!-- form in materialize -->
-                <form>
-                    <v-card-text>
-                        <h4>{{ pipeline_description }}</h4>
-                        <p v-for="i in this.form" :key="i.label" v-if="['str', 'bool', 'int'].includes(i.type)">
-                            <input v-if="i.type === 'str'" :id="i.label" v-model="form_data[i.label]" />
-                            <input type="checkbox" v-else-if="i.type === 'bool'" :id="i.label" v-model="form_data[i.label]" />
-                            <input type="number" v-else-if="i.type === 'int'" :id="i.label" v-model="form_data[i.label]" />
-                            <label :for="i.label">{{ i.label }}</label>
-                        </p>
-                        <DataFilesForm :selected.sync="input_data"
-                                       v-if="this.form.map(elem => elem.label).includes('input_data')" />
-                        <LabelsFilesForm :selected.sync="input_labels"
-                                         v-if="this.form.map(elem => elem.label).includes('input_labels')" />
-                        <Module scope="pre_processing" scope_name="Pre processing" icon="transform"
-                                v-if="this.form.map(elem => elem.label).includes('pre_processing')"
-                                :parameters_data.sync="pre_processing" />
-                        <Module scope="features_extractors" scope_name="Features extractors" icon="equalizer"
-                                v-if="this.form.map(elem => elem.label).includes('features_extractors')"
-                                :parameters_data.sync="features_extractors" />
-                        <Module scope="performance_indicators" scope_name="Performance indicators" icon="art_track"
-                                v-if="this.form.map(elem => elem.label).includes('performance_indicators')"
-                                :parameters_data.sync="performance_indicators" />
-                        <MachineLearning
-                                v-if="this.form.map(elem => elem.label).includes('machine_learning')"
-                                :parameters_data.sync="machine_learning"/>
-                    </v-card-text>
-                    <v-card-text class="text-xs-right">
-                        <input type="button" class="btn waves-effect waves-light" name="submit" value="Submit" />
-                    </v-card-text>
-                </form>
+                <v-text-field label="Enter a unique name for the pipeline to create"
+                              v-model="new_pipeline_name" style="padding-top: 30px"></v-text-field>
+                <v-card-text class="text-xs-right">
+                    <v-btn large :disabled="selected_pipeline_type === '' || new_pipeline_name.length === 0"
+                           @click="create_pipeline">Create pipeline</v-btn>
+                </v-card-text>
+            </v-card>
+        </v-flex>
+        <v-flex xs12 sm8 offset-sm2 v-else-if="loaded_pipelines_names.includes(pipeline_selected)">
+            <v-card>
+                <v-card-text>
+                    <v-layout>
+                        <h4 class="text-xs-left">{{ loaded_pipeline.name }} parameters</h4>
+                        <v-spacer></v-spacer>
+                        <v-fab-transition>
+                            <v-btn color="blue"
+                                   dark
+                                   fab
+                                   fixed
+                                   bottom
+                                   right v-if="this.saved_state"><v-icon class="text-xs-right">fa-save</v-icon></v-btn>
+                            <v-btn color="blue"
+                                   dark
+                                   fab
+                                   fixed
+                                   bottom
+                                   right v-else><v-icon class="text-xs-right">fa-hourglass-end</v-icon></v-btn>
+                        </v-fab-transition>
+                    </v-layout>
+                    <p v-for="(param, param_name) in loaded_pipeline.parameters" :key="param_name" v-if="['str', 'bool', 'int'].includes(param.type)">
+                        <input v-if="param.type === 'str'" :id="param_name" v-model="param.value" />
+                        <input type="checkbox" v-else-if="param.type === 'bool'" :id="param_name" v-model="param.value" />
+                        <input type="number" v-else-if="param.type === 'int'" :id="param_name" v-model="param.value" />
+                        <label :for="param_name">{{ param_name }}</label>
+                    </p>
+                    <FilesForm :selected.sync="loaded_pipeline.parameters.input_data.value"
+                               v-if="Object.keys(loaded_pipeline.parameters).includes('input_data')"
+                               scope_name="Data files" scope="data_files" />
+                    <FilesForm :selected.sync="loaded_pipeline.parameters.input_labels.value"
+                               v-if="Object.keys(loaded_pipeline.parameters).includes('input_labels')"
+                               scope_name="Labels files" scope="labels_files" />
+                    <Module scope="pre_processing" scope_name="Pre processing" icon="transform"
+                            v-if="Object.keys(loaded_pipeline.parameters).includes('pre_processing')"
+                            :parameters_data.sync="loaded_pipeline.parameters.pre_processing.value" />
+                    <Module scope="features_extractors" scope_name="Features extractors" icon="equalizer"
+                            v-if="Object.keys(loaded_pipeline.parameters).includes('features_extractors')"
+                            :parameters_data.sync="loaded_pipeline.parameters.features_extractors.value" />
+                    <Module scope="performance_indicators" scope_name="Performance indicators" icon="art_track"
+                            v-if="Object.keys(loaded_pipeline.parameters).includes('performance_indicators')"
+                            :parameters_data.sync="loaded_pipeline.parameters.performance_indicators.value" />
+                    <MachineLearning
+                            v-if="Object.keys(loaded_pipeline.parameters).includes('machine_learning')"
+                            :parameters_data.sync="loaded_pipeline.parameters.machine_learning.value"/>
+                </v-card-text>
             </v-card>
         </v-flex>
     </v-container>
@@ -71,156 +92,145 @@
   import MachineLearning from './MachineLearning';
   import 'materialize-css'; // It installs the JS asset only
   import 'materialize-css/dist/css/materialize.min.css';
-  import DataFilesForm from "./DataFilesForm";
-  import LabelsFilesForm from "./LabelsFilesForm";
+  import FilesForm from "./FilesForm";
   import lodash from 'lodash';
+
+  const insert = (arr, index, newItem) => [
+    // part of the array before the specified index
+    ...arr.slice(0, index),
+    // inserted item
+    newItem,
+    // part of the array after the specified index
+    ...arr.slice(index)
+  ];
 
   export default {
     components: {
       Module,
       MachineLearning,
-      DataFilesForm,
-      LabelsFilesForm,
+      FilesForm,
     },
     data() {
       return {
-        pipelines: [],
-        selected_pipeline: '',
-        current_pipeline_form: '',
-        pipeline_forms: {},
-        show_data_files_form: false,
-        show_labels_files_form: false,
-        user_pipelines_items: ['Create new pipeline', '---'],
-        loaded_pipeline: '',
-        form_opened: false,
-        users_pipelines: [],
-        pipelines_descriptions: [],
-        pipelines_url: "",
-        form: [],
-        pipeline_description: "",
-        form_data: {},
-        input_data: [],
-        input_labels: [],
-        pre_processing: [],
-        features_extractors: [],
-        performance_indicators: [],
-        machine_learning: {},
-        actual_json_form: {},
+        create_option: "Create new pipeline",  // Constant
+        pipelines_types: [],  // Array of pipelines types from API
+        loaded_pipelines: [],  // Array of pipelines existing in DB
+        pipeline_selected: "",  // First selector model: name of pipeline (member of loaded_pipelines_names) or create_option
+        selected_pipeline_type: "",  // Second selector model: changeable only if pipeline_selected === create_option
+        new_pipeline_name: "",  // When creating a new pipeline, this is the name the used gives to it
+        saved_state: false,  // If true, the form has been saved. Else, it is pending
       };
     },
-    methods: {
-      form_json: function () {
-        let selected_pipeline = this.pipelines.find(pip => pip.description === this.selected_pipeline);
-        Object.keys(selected_pipeline.parameters).forEach(param => {
-          switch (param) {
-            case "pre_processing":
-              this.actual_json_form["pre_processing"] = this.pre_processing
-                .filter(elem => elem.value === true)
-                .map(elem => {
-                  return {
-                    method: elem.name,
-                    parameters: Object.entries(elem.parameters).reduce(
-                      (params, [p, v]) => {
-                        params[p] = v.value;
-                        return params;
-                      }, {})
-                  }
-                });
-              break;
-            case "features_extractors":
-              this.actual_json_form["features_extractors"] = this.features_extractors
-                .filter(elem => elem.value === true)
-                .map(elem => {
-                  return {
-                    method: elem.name,
-                    parameters: Object.entries(elem.parameters).reduce(
-                      (params, [p, v]) => {
-                        params[p] = v.value;
-                        return params;
-                      }, {})
-                  }
-                });
-              break;
-            case "performance_indicators":
-              this.actual_json_form["performance_indicators"] = this.performance_indicators
-                .filter(elem => elem.value === true)
-                .map(elem => {
-                  return {
-                    method: elem.name,
-                    parameters: Object.entries(elem.parameters).reduce(
-                      (params, [p, v]) => {
-                        params[p] = v.value;
-                        return params;
-                      }, {})
-                  }
-                });
-              break;
-            case "input_data":
-              this.actual_json_form["input_data"] = this.input_data.map(df => {
-                return {
-                  file_name: df,
-                  data_file: "audio",
-                  formatter: df.split('.').slice(-1).pop()
-                }
-              });
-              break;
-            case "input_labels":
-              this.actual_json_form["input_labels"] = this.input_labels.map(lab => {
-                return {
-                  labels_file: lab,
-                  labels_formatter: lab.split('.').slice(-1).pop()
-                }
-              });
-              break;
-            case "machine_learning":
-              try {
-                this.actual_json_form["machine_learning"] = {
-                  method: this.machine_learning.name,
-                  parameters: Object.entries(this.machine_learning.parameters).reduce(
-                    (params, [p, v]) => {
-                      params[p] = v.value;
-                      return params;
-                    }, {})
-                };
-              } catch (e) {
-              }
-              break;
-            default:
-              this.actual_json_form[param] = this.form_data[param];
-              break;
-          }
-        });
-        console.log(this.actual_json_form);
+    computed: {
+      pipelines_types_description () {
+        return this.pipelines_types.map(elem => elem.description);
       },
-      reloadForm(value) {
-        this.form = [
-          {
-            label: "Pipeline name",
-            type: "str",
-            value: ""
-          }
-        ];
-        let selected_pipeline = null;
-        selected_pipeline = this.pipelines.find(pip => pip.description === value);
-        Object.entries(selected_pipeline.parameters).forEach(([parameter_name, parameter]) => {
-          this.form_data[parameter_name] = parameter.value;
-          this.form.push({
-            label: parameter_name,
-            type: parameter.type,
-            value: parameter.value,
-          });
-        });
-
-        // If loaded pipeline, fill form with its values
-        // if (this.loaded_pipeline !== "Create new pipeline") {
-        // }
-        // // Else, create an empty (default parameters) form
-        // else {
-        // }
+      loaded_pipelines_names () {
+        return this.loaded_pipelines.map(elem => elem.name);
+      },
+      pipelines_selector_items () {
+        return insert(insert(this.loaded_pipelines_names, 0, this.create_option), 1, '---')
+      },
+      loaded_pipeline() {
+        return this.loaded_pipelines.find(pip => pip.name === this.pipeline_selected);
+      },
+    },
+    methods: {
+      checkUserLoadedType (name) {
+        this.pipeline_selected = name;
+        let pipeline_object = this.loaded_pipelines.find(elem => elem.name === name);
+        // this.populate_remaining_data(pipeline_object);
+        if (this.loaded_pipelines_names.includes(name)) {
+          this.selected_pipeline_type = pipeline_object.type;
+        } else {
+          this.selected_pipeline_type = '';
+        }
+      },
+      form_json: function () {
+        // let selected_pipeline = this.pipelines.find(pip => pip.description === this.selected_pipeline);
+        // Object.keys(selected_pipeline.parameters).forEach(param => {
+        //   switch (param) {
+        //     case "pre_processing":
+        //       this.actual_json_form["pre_processing"] = this.pre_processing
+        //         .filter(elem => elem.value === true)
+        //         .map(elem => {
+        //           return {
+        //             method: elem.name,
+        //             parameters: Object.entries(elem.parameters).reduce(
+        //               (params, [p, v]) => {
+        //                 params[p] = v.value;
+        //                 return params;
+        //               }, {})
+        //           }
+        //         });
+        //       break;
+        //     case "features_extractors":
+        //       this.actual_json_form["features_extractors"] = this.features_extractors
+        //         .filter(elem => elem.value === true)
+        //         .map(elem => {
+        //           return {
+        //             method: elem.name,
+        //             parameters: Object.entries(elem.parameters).reduce(
+        //               (params, [p, v]) => {
+        //                 params[p] = v.value;
+        //                 return params;
+        //               }, {})
+        //           }
+        //         });
+        //       break;
+        //     case "performance_indicators":
+        //       this.actual_json_form["performance_indicators"] = this.performance_indicators
+        //         .filter(elem => elem.value === true)
+        //         .map(elem => {
+        //           return {
+        //             method: elem.name,
+        //             parameters: Object.entries(elem.parameters).reduce(
+        //               (params, [p, v]) => {
+        //                 params[p] = v.value;
+        //                 return params;
+        //               }, {})
+        //           }
+        //         });
+        //       break;
+        //     case "input_data":
+        //       this.actual_json_form["input_data"] = this.input_data.map(df => {
+        //         return {
+        //           file_name: df,
+        //           data_file: "audio",
+        //           formatter: df.split('.').slice(-1).pop()
+        //         }
+        //       });
+        //       break;
+        //     case "input_labels":
+        //       this.actual_json_form["input_labels"] = this.input_labels.map(lab => {
+        //         return {
+        //           labels_file: lab,
+        //           labels_formatter: lab.split('.').slice(-1).pop()
+        //         }
+        //       });
+        //       break;
+        //     case "machine_learning":
+        //       try {
+        //         this.actual_json_form["machine_learning"] = {
+        //           method: this.machine_learning.name,
+        //           parameters: Object.entries(this.machine_learning.parameters).reduce(
+        //             (params, [p, v]) => {
+        //               params[p] = v.value;
+        //               return params;
+        //             }, {})
+        //         };
+        //       } catch (e) {
+        //       }
+        //       break;
+        //     default:
+        //       this.actual_json_form[param] = this.form_data[param];
+        //       break;
+        //   }
+        // });
+        // console.log(this.actual_json_form);
       },
       load_pipelines_types() {
-        this.pipelines_url = api_url + "pipelines/";
-        let url = this.pipelines_url;
+        let url = api_url + "pipelines/";
         const options = {
           method: 'GET',
           headers: {
@@ -234,21 +244,8 @@
         axios(options).catch(error => {
           console.log(error);
         }).then(request => {
-          this.pipelines = request.data;
-          this.pipelines.forEach(element => {
-            this.pipelines_descriptions.push(element.description);
-          })
+          this.pipelines_types = request.data;
         });
-      },
-      open_form(value) {
-        if (this.users_pipelines.includes(value) ||
-          "Create new pipeline" === value) {
-          this.loaded_pipeline = value;
-          this.form_opened = true;
-        } else {
-          this.form_opened = false;
-          this.loaded_pipeline = '';
-        }
       },
       load_users_pipelines() {
         let url = api_url + "user_pipelines/";
@@ -265,7 +262,7 @@
         axios(options).catch(error => {
           console.log(error);
         }).then(request => {
-          console.log(request);
+          this.loaded_pipelines = request.data;
         });
       },
       save_users_pipelines() {
@@ -281,42 +278,61 @@
           },
           url,
           data: {
-            form: this.actual_json_form,
+            pipeline_name: this.pipeline_selected,
+            parameters: this.loaded_pipeline.parameters,
           }
         };
         axios(options).catch(error => {
           console.log(error);
-        }).then(request => {
-          console.log(request)
+        }).then(() => {
+          this.saved_state = true;
         });
-      }
-    },
-    mounted() {
-      this.load_users_pipelines();
-      this.load_pipelines_types();
+      },
+      create_pipeline() {
+        let data = {
+          new_pipeline_name: this.new_pipeline_name,
+          new_pipeline_type: this.selected_pipeline_type
+        };
+        let url = api_url + "user_pipelines/";
+        const options = {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Token ' + localStorage.getItem("authorization_token")
+          },
+          xhrFields: {
+            withCredentials: true
+          },
+          url,
+          data: data
+        };
+        axios(options).catch(error => {
+          console.log(error);
+        }).then(() => {
+          this.load_users_pipelines();
+          this.$forceUpdate();
+          this.pipeline_selected = this.new_pipeline_name;
+          this.new_pipeline_name = '';
+        });
+      },
     },
     watch: {
-      features_extractors () {
-        this.save_users_pipelines();
-      },
-      machine_learning () {
-        this.save_users_pipelines();
-      },
-      pre_processing () {
-        this.save_users_pipelines();
-      },
-      performance_indicators () {
-        this.save_users_pipelines();
-      },
-      input_data () {
-        this.save_users_pipelines();
-      },
-      input_labels () {
-        this.save_users_pipelines();
+      loaded_pipeline: {
+        deep: true,
+        handler () {
+          this.saved_state = false;
+          if (this.loaded_pipeline === undefined) {
+            return;
+          }
+          if ("parameters" in this.loaded_pipeline) {
+            this.save_users_pipelines()
+          }
+        }
       }
     },
     created () {
       this.debouncedGetFormJson = lodash.debounce(this.form_json, 500);
+      this.load_pipelines_types();
+      this.load_users_pipelines();
     }
   };
 </script>
