@@ -39,7 +39,6 @@
                 <v-card-text>
                     <v-layout>
                         <h4 class="text-xs-left">{{ loaded_pipeline.name }} parameters</h4>
-                        <v-spacer></v-spacer>
                         <v-fab-transition>
                             <v-btn color="blue"
                                    dark
