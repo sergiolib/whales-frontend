@@ -139,10 +139,9 @@
     methods: {
       checkUserLoadedType (name) {
         this.pipeline_selected = name;
-        let pipeline_object = this.loaded_pipelines.find(elem => elem.name === name);
         // this.populate_remaining_data(pipeline_object);
         if (this.loaded_pipelines_names.includes(name)) {
-          this.selected_pipeline_type = pipeline_object.type;
+          this.selected_pipeline_type = this.loaded_pipeline.type;
         } else {
           this.selected_pipeline_type = '';
         }
