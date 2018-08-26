@@ -57,7 +57,7 @@ export default {
   },
   methods: {
     get_data () {
-      let url = api_url + "data_files/";
+      let url = api_url + "get/data_files";
       const options = {
         method: 'GET',
         headers: {
@@ -69,14 +69,23 @@ export default {
         url,
       };
       axios(options).then(response => {
-        this.data_elements = response.data;
+        this.data_elements = [];
+        let data_elements = response.data;
+        data_elements.forEach(element => {
+          let tmp = {
+            name: element.location.split("/").pop(),
+            owner: element.owner_username,
+            public: element.public,
+          };
+          this.data_elements.push(tmp);
+        })
       }).catch(error => {
         console.log(error);
         this.data_elements = [];
       });
     },
     get_labels () {
-      let url = api_url + "labels_files/";
+      let url = api_url + "get/labels_files";
       const options = {
         method: 'GET',
         headers: {
@@ -88,14 +97,23 @@ export default {
         },
       };
       axios(options).then(response => {
-        this.labels_elements = response.data;
+        this.labels_elements = [];
+        let data_elements = response.data;
+        data_elements.forEach(element => {
+          let tmp = {
+            name: element.location.split("/").pop(),
+            owner: element.owner_username,
+            public: element.public,
+          };
+          this.labels_elements.push(tmp);
+        })
       }).catch(error => {
         console.log(error);
         this.labels_elements = [];
       });
     },
     delete_data (elements) {
-      let url = api_url + "data_files/";
+      let url = api_url + "store/data_files/a/b";
       const options = {
         method: 'DELETE',
         headers: {
@@ -116,7 +134,7 @@ export default {
       });
     },
     delete_labels (elements) {
-      let url = api_url + "labels_files/";
+      let url = api_url + "store/labels_files/a";
       const options = {
         method: 'DELETE',
         headers: {
@@ -136,7 +154,7 @@ export default {
     },
     update_data (elements, operation) {
       // Elements should have the changes in them
-      let url = api_url + "data_files/";
+      let url = api_url + "store/data_files/a/b";
       const options = {
         method: 'PATCH',
         headers: {
@@ -159,7 +177,7 @@ export default {
     },
     update_labels (elements, operation) {
       // Elements should have the changes in them
-      let url = api_url + "labels_files/";
+      let url = api_url + "store/labels_files/a";
       const options = {
         method: 'PATCH',
         headers: {

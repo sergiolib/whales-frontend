@@ -18,21 +18,21 @@
                 <v-flex>
                     <v-card>
                         <v-list two-line subheader>
-                            <v-subheader inset>Uploaded files</v-subheader>
+                            <v-subheader inset>Files uploading</v-subheader>
 
                             <v-list-tile
                                     v-for="item in props.files"
+                                    v-if="item.status !== 'success'"
                                     :key="item.name"
                                     avatar
-                                    :color="item.xhrResponse.statusCode === 200 ? 'green' : 'red'"
+                                    color="red"
                             >
                                 <v-list-tile-avatar>
                                     <v-icon>{{ files_icon }}</v-icon>
                                 </v-list-tile-avatar>
 
                                 <v-list-tile-content>
-                                    <v-list-tile-title v-if="item.status !== 'success'">{{ item.progress }}%</v-list-tile-title>
-                                    <v-list-tile-title v-else>{{ parse_message(item.xhrResponse.response) }}</v-list-tile-title>
+                                    <v-list-tile-title>{{ item.progress.toFixed([2]) }}%</v-list-tile-title>
                                     <v-list-tile-sub-title>{{ item.name }}</v-list-tile-sub-title>
                                 </v-list-tile-content>
                             </v-list-tile>
@@ -53,11 +53,12 @@ export default {
         return {
           options: {
             url: "",
+            method: "put",
           },
           dz_color: "white",
           response_color: "blue",
           files_icon: "fa-file-audio",
-          dz_message: "Browser or drop your files to upload here"
+          dz_message: "Browser or drop your files to upload here",
         };
     },
   methods: {
@@ -67,13 +68,6 @@ export default {
     stopped_dragging () {
       this.dz_color = "white"
     },
-    parse_message (data) {
-      if (data) {
-        return JSON.parse(data).message;
-      } else {
-        return "";
-      }
-    }
   },
   props: {
     "on_complete": Function,

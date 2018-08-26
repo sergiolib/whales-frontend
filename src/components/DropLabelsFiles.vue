@@ -8,7 +8,7 @@ export default {
     data () {
       return {
         options: {
-          url: api_url + "labels_files/",
+          url: api_url + "store/labels_files/csv",
           headers: {
             Authorization: "Token " + localStorage.getItem("authorization_token"),
           },

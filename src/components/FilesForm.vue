@@ -9,11 +9,11 @@
             </li>
             <li>
                 <v-data-table :items="elements" :headers="table_headers"
-                              select-all item-key="name" v-model="local_selected">
+                              select-all item-key="name">
                     <template slot="items" slot-scope="props">
                         <td>
                             <v-checkbox
-                                    v-model="props.selected"
+                                    v-model="selected[props.item.name]"
                                     id="props.name"
                                     primary
                             ></v-checkbox>
@@ -35,11 +35,13 @@
 <script>
   import axios from 'axios';
   import { api_url } from "../config";
+  import _ from 'lodash';
 
   export default {
     data() {
       return {
         elements: [],
+        selected: {},
       };
     },
     methods: {
@@ -62,10 +64,33 @@
           default:
             return "text";
         }
-      }
-    },
+      },
+        save: _.debounce(function () {
+          this.saved_state = false;
+          let url = api_url + "user_pipelines/save/" + this.scope;
+          const options = {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Token ' + localStorage.getItem("authorization_token")
+            },
+            xhrFields: {
+              withCredentials: true
+            },
+            url,
+            data: {
+              pipeline_name: this.pipeline_name,
+              parameters: this.selected_elements,
+            }
+          };
+          axios(options).catch(error => {
+            console.log(error);
+          }).then(() => {
+            this.saved_state = true;
+          })}, 500
+        ),
+      },
     mounted() {
-      let url = api_url + this.scope + "/";
+      let url = api_url + "get/" + this.scope;
       axios(this.options(url)).catch(error => {
         console.log(error);
       }).then(request => {
@@ -74,18 +99,19 @@
           return elem;
         });
         this.elements = elements;
+
       });
     },
     props: {
-      selected: {
-        type: Array,
-        required: true,
-      },
       scope_name: {
         type: String,
         required: true,
       },
       scope: {
+        type: String,
+        required: true,
+      },
+      pipeline_name: {
         type: String,
         required: true,
       }
@@ -111,14 +137,26 @@
         }
         return 'There are no ' + this.scope_name + ' available for you'
       },
-      local_selected: {
-        get() {
-          return this.selected;
-        },
-        set(val) {
-          this.$emit('update:selected', val);
-        }
+      selected_elements () {
+        let selected = Object.entries(this.selected).filter(([k, v]) => {
+          if (v) {
+            return k;
+          }
+        }).map(e => {return e[0]});
+        return Object.values(this.elements).filter(v => {
+          if (selected.indexOf(v.name) > -1) {
+            return v;
+          }
+        })
       }
     },
+    watch: {
+      selected: {
+        deep: true,
+        handler () {
+          this.save()
+        }
+      }
+    }
   }
 </script>

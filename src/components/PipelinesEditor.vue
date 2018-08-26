@@ -39,47 +39,48 @@
                 <v-card-text>
                     <v-layout>
                         <h4 class="text-xs-left">{{ loaded_pipeline.name }} parameters</h4>
-                        <v-fab-transition>
+                        <!--<v-fab-transition>
                             <v-btn color="blue"
                                    dark
                                    fab
                                    fixed
                                    bottom
                                    right v-if="this.saved_state"
-                                   @click="save_users_pipelines"><v-icon class="text-xs-right">fa-save</v-icon></v-btn>
+                                   @click="save_parameters"><v-icon class="text-xs-right">fa-save</v-icon></v-btn>
                             <v-btn color="blue"
                                    dark
                                    fab
                                    fixed
                                    bottom
                                    right v-else
-                                   @click="save_users_pipelines"><v-icon class="text-xs-right">fa-hourglass-end</v-icon></v-btn>
-                        </v-fab-transition>
+                                   @click="save_parameters"><v-icon class="text-xs-right">fa-hourglass-end</v-icon></v-btn>
+                        </v-fab-transition>-->
                     </v-layout>
                     <p v-for="(param, param_name) in loaded_pipeline.parameters" :key="param_name" v-if="['str', 'bool', 'int'].includes(param.type)">
-                        <input v-if="param.type === 'str'" :id="param_name" v-model="param.value" />
-                        <input type="checkbox" v-else-if="param.type === 'bool'" :id="param_name" v-model="param.value" />
-                        <input type="number" v-else-if="param.type === 'int'" :id="param_name" v-model="param.value" />
+                        <input v-if="param.type === 'str'" :id="param_name" v-model="param.value" :oninput="save_parameters(param_name)" />
+                        <input v-else-if="param.type === 'bool'" :id="param_name" type="checkbox" v-model="param.value" :oninput="save_parameters(param_name)" />
+                        <input v-else-if="param.type === 'int'" :id="param_name" type="number" v-model="param.value" :oninput="save_parameters(param_name)" />
                         <label :for="param_name">{{ param_name }}</label>
                     </p>
-                    <FilesForm :selected.sync="loaded_pipeline.parameters.input_data.value"
+                    <FilesForm :pipeline_name="pipeline_selected"
                                v-if="Object.keys(loaded_pipeline.parameters).includes('input_data')"
-                               scope_name="Data files" scope="data_files" />
-                    <FilesForm :selected.sync="loaded_pipeline.parameters.input_labels.value"
+                               scope_name="Data files" scope="input_data" />
+                    <FilesForm :pipeline_name="pipeline_selected"
                                v-if="Object.keys(loaded_pipeline.parameters).includes('input_labels')"
-                               scope_name="Labels files" scope="labels_files" />
+                               scope_name="Labels files" scope="input_labels" />
                     <Module scope="pre_processing" scope_name="Pre processing" icon="transform"
                             v-if="Object.keys(loaded_pipeline.parameters).includes('pre_processing')"
-                            :parameters_data.sync="loaded_pipeline.parameters.pre_processing.value" />
+                            :pipeline_name="pipeline_selected" />
                     <Module scope="features_extractors" scope_name="Features extractors" icon="equalizer"
                             v-if="Object.keys(loaded_pipeline.parameters).includes('features_extractors')"
-                            :parameters_data.sync="loaded_pipeline.parameters.features_extractors.value" />
+                            :pipeline_name="pipeline_selected" />
                     <Module scope="performance_indicators" scope_name="Performance indicators" icon="art_track"
                             v-if="Object.keys(loaded_pipeline.parameters).includes('performance_indicators')"
-                            :parameters_data.sync="loaded_pipeline.parameters.performance_indicators.value" />
+                            :pipeline_name="pipeline_selected" />
                     <MachineLearning
-                            v-if="Object.keys(loaded_pipeline.parameters).includes('machine_learning')"
-                            :parameters_data.sync="loaded_pipeline.parameters.machine_learning.value"/>
+                            <!--v-if="Object.keys(loaded_pipeline.parameters).includes('machine_learning')"-->
+                            v-if="false"
+                            :pipeline_name="pipeline_selected" />
                 </v-card-text>
             </v-card>
         </v-flex>
@@ -119,7 +120,6 @@
         pipeline_selected: "",  // First selector model: name of pipeline (member of loaded_pipelines_names) or create_option
         selected_pipeline_type: "",  // Second selector model: changeable only if pipeline_selected === create_option
         new_pipeline_name: "",  // When creating a new pipeline, this is the name the used gives to it
-        saved_state: false,  // If true, the form has been saved. Else, it is pending
       };
     },
     computed: {
@@ -147,7 +147,7 @@
         }
       },
       load_pipelines_types() {
-        let url = api_url + "pipelines/";
+        let url = api_url + "get/pipelines_types";
         const options = {
           method: 'GET',
           headers: {
@@ -165,7 +165,7 @@
         });
       },
       load_users_pipelines() {
-        let url = api_url + "user_pipelines/";
+        let url = api_url + "user_pipelines";
         const options = {
           method: 'GET',
           headers: {
@@ -182,35 +182,12 @@
           this.loaded_pipelines = request.data;
         });
       },
-      save_users_pipelines: _.debounce(function () {
-        this.saved_state = false;
-        let url = api_url + "user_pipelines/";
-        const options = {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Token ' + localStorage.getItem("authorization_token")
-          },
-          xhrFields: {
-            withCredentials: true
-          },
-          url,
-          data: {
-            pipeline_name: this.pipeline_selected,
-            parameters: this.loaded_pipeline.parameters,
-          }
-        };
-        axios(options).catch(error => {
-          console.log(error);
-        }).then(() => {
-          this.saved_state = true;
-        })}, 500
-        ),
       create_pipeline() {
         let data = {
           new_pipeline_name: this.new_pipeline_name,
           new_pipeline_type: this.selected_pipeline_type
         };
-        let url = api_url + "user_pipelines/";
+        let url = api_url + "user_pipelines/create";
         const options = {
           method: 'POST',
           headers: {
@@ -231,19 +208,31 @@
           this.new_pipeline_name = '';
         });
       },
-    },
-    watch: {
-      loaded_pipeline: {
-        deep: true,
-        handler () {
-          if (this.loaded_pipeline === undefined) {
-            return;
+      save_parameters: _.debounce(function (k) {
+        this.saved_state = false;
+        let url = api_url + "user_pipelines/save/" + k;
+        const options = {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Token ' + localStorage.getItem("authorization_token")
+          },
+          xhrFields: {
+            withCredentials: true
+          },
+          url,
+          data: {
+            pipeline_name: this.pipeline_selected,
+            value: this.loaded_pipeline.parameters[k].value,
+            type: this.loaded_pipeline.parameters[k].type,
           }
-          if ("parameters" in this.loaded_pipeline) {
-            this.save_users_pipelines()
-          }
-        }
-      }
+        };
+        axios(options).catch(error => {
+          console.log(error);
+        }).then(() => {
+          this.saved_state = true;
+        })
+        }, 500
+      ),
     },
     created () {
       this.load_pipelines_types();
