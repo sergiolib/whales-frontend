@@ -12,6 +12,7 @@
                         :items="pipelines_selector_items"
                         box
                         label="Create new pipeline or select to modify"
+                        v-model="pipeline_selected"
                         @change="checkUserLoadedType"
                 ></v-select>
                 <v-select
@@ -138,8 +139,6 @@
     },
     methods: {
       checkUserLoadedType (name) {
-        this.pipeline_selected = name;
-        // this.populate_remaining_data(pipeline_object);
         if (this.loaded_pipelines_names.includes(name)) {
           this.selected_pipeline_type = this.loaded_pipeline.type;
         } else {
@@ -147,7 +146,7 @@
         }
       },
       load_pipelines_types() {
-        let url = api_url + "get/pipelines_types";
+        let url = api_url + "get/pipelines";
         const options = {
           method: 'GET',
           headers: {
@@ -183,6 +182,7 @@
         });
       },
       create_pipeline() {
+        let type = this.selected_pipeline_type;
         let data = {
           new_pipeline_name: this.new_pipeline_name,
           new_pipeline_type: this.selected_pipeline_type
@@ -206,6 +206,7 @@
           this.$forceUpdate();
           this.pipeline_selected = this.new_pipeline_name;
           this.new_pipeline_name = '';
+          this.selected_pipeline_type = type;
         });
       },
       save_parameters: _.debounce(function (k) {

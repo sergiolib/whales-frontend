@@ -7,6 +7,7 @@
                     <v-icon large class="right">fa-database</v-icon>
                 </h4>
             </li>
+            {{ this.selected_elements }}
             <li>
                 <v-data-table :items="elements" :headers="table_headers"
                               select-all item-key="name">
@@ -45,6 +46,29 @@
       };
     },
     methods: {
+      load_user_selections(elements) {
+        let url = api_url + "user_pipelines/load/" + this.scope + "?pipeline_name=" + this.pipeline_name;
+        const options = {
+          method: 'GET',
+          headers: {
+            'Authorization': 'Token ' + localStorage.getItem("authorization_token")
+          },
+          xhrFields: {
+            withCredentials: true
+          },
+          url,
+        };
+        axios(options).catch(error => {
+          console.log(error);
+        }).then((response) => {
+          let selected = {};
+          response.data.value.forEach(elem => {
+            selected[elem.name] = true;
+          });
+          this.elements = elements;
+          this.selected = selected;
+        })
+      },
       options: url => {
         return {
           method: 'GET',
@@ -67,7 +91,7 @@
       },
         save: _.debounce(function () {
           this.saved_state = false;
-          let url = api_url + "user_pipelines/save/" + this.scope;
+          let url = api_url + "user_pipelines/save/" + this.scope + "?pipeline_name=" + this.pipeline_name;
           const options = {
             method: 'POST',
             headers: {
@@ -78,8 +102,7 @@
             },
             url,
             data: {
-              pipeline_name: this.pipeline_name,
-              parameters: this.selected_elements,
+              value: this.selected_elements,
             }
           };
           axios(options).catch(error => {
@@ -90,16 +113,19 @@
         ),
       },
     mounted() {
-      let url = api_url + "get/" + this.scope;
+      let url = api_url + "get/" + this.scope + "?pipeline_name=" + this.pipeline_name;
       axios(this.options(url)).catch(error => {
         console.log(error);
       }).then(request => {
         let elements = request.data;  // Array
         elements = elements.map(elem => {
-          return elem;
+          return {
+            name: elem.location.split("/").pop(),
+            owner: elem.owner_username,
+          };
         });
-        this.elements = elements;
-
+        // load the selected elements
+        this.load_user_selections(elements);
       });
     },
     props: {
@@ -151,11 +177,14 @@
       }
     },
     watch: {
-      selected: {
+      selected_elements: {
         deep: true,
         handler () {
           this.save()
         }
+      },
+      pipeline_name () {
+        this.load_user_selections(this.elements);
       }
     }
   }

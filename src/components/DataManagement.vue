@@ -57,7 +57,7 @@ export default {
   },
   methods: {
     get_data () {
-      let url = api_url + "get/data_files";
+      let url = api_url + "get/input_data";
       const options = {
         method: 'GET',
         headers: {
@@ -113,7 +113,7 @@ export default {
       });
     },
     delete_data (elements) {
-      let url = api_url + "store/data_files/a/b";
+      let url = api_url + "store/input_data/a/b";
       const options = {
         method: 'DELETE',
         headers: {
@@ -134,7 +134,7 @@ export default {
       });
     },
     delete_labels (elements) {
-      let url = api_url + "store/labels_files/a";
+      let url = api_url + "store/input_labels/a";
       const options = {
         method: 'DELETE',
         headers: {
@@ -154,7 +154,7 @@ export default {
     },
     update_data (elements, operation) {
       // Elements should have the changes in them
-      let url = api_url + "store/data_files/a/b";
+      let url = api_url + "store/input_data/a/b";
       const options = {
         method: 'PATCH',
         headers: {
@@ -177,7 +177,7 @@ export default {
     },
     update_labels (elements, operation) {
       // Elements should have the changes in them
-      let url = api_url + "store/labels_files/a";
+      let url = api_url + "store/input_labels/a";
       const options = {
         method: 'PATCH',
         headers: {
