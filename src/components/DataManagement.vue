@@ -85,7 +85,7 @@ export default {
       });
     },
     get_labels () {
-      let url = api_url + "get/labels_files";
+      let url = api_url + "get/input_labels";
       const options = {
         method: 'GET',
         headers: {
