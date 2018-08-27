@@ -52,9 +52,19 @@
                                 <v-subheader>
                                     <h5>Logs</h5>
                                 </v-subheader>
-                                <v-list-tile v-for="(l, i) in logs" :key="i">
-                                    {{ l }}
-                                </v-list-tile>
+                                <v-flex xs12 lg5 mb-3>
+                                    <v-expansion-panel popout>
+                                        <v-expansion-panel-content
+                                                v-for="(item,i) in logs"
+                                                :key="i"
+                                        >
+                                            <div slot="header">{{ item.name }}</div>
+                                            <v-card>
+                                                <v-card-text>{{ item.content }}</v-card-text>
+                                            </v-card>
+                                        </v-expansion-panel-content>
+                                    </v-expansion-panel>
+                                </v-flex>
                             </v-list>
                         </v-layout>
                     </v-card>
@@ -65,9 +75,20 @@
                                 <v-subheader>
                                     <h5>Results</h5>
                                 </v-subheader>
-                                <v-list-tile v-for="i in 5" :key="i">
-                                    Hello
-                                </v-list-tile>
+                                <v-flex xs12 lg5 mb-3>
+                                    <v-expansion-panel popout>
+                                        <v-expansion-panel-content
+                                                v-for="(item,i) in results"
+                                                :key="i"
+                                        >
+                                            <div slot="header">{{ item.name }}</div>
+                                            <v-card>
+                                                <v-card-text v-if="!item.content.startsWith('data:image')">{{ item.content }}</v-card-text>
+                                                <v-card-text v-else><img :src="item.content" /></v-card-text>
+                                            </v-card>
+                                        </v-expansion-panel-content>
+                                    </v-expansion-panel>
+                                </v-flex>
                             </v-list>
                         </v-layout>
                     </v-card>
@@ -121,7 +142,7 @@
   import _ from 'lodash';
 
   let options_inner = function (pipeline_name) {
-    let url = api_url + "user_pipelines/launch?pipeline_name=" + pipeline_name;
+    let url = api_url + "user_pipelines/process?pipeline_name=" + pipeline_name;
     return {
       method: 'GET',
       headers: {
@@ -156,7 +177,8 @@
         rename_dialog: false,
         rename_new_name: '',
         process_state: 0,  // 0: not started, 1: started and running ok, 2: started and finished in error, 3: started and finished ok
-        logs: []
+        logs: [],
+        results: [],
       };
     },
     computed: {
@@ -220,6 +242,29 @@
           this.logs = [];
         }
       },
+      update_results() {
+        if (this.pipeline_selected !== '') {
+          let url = api_url + "user_pipelines/results?pipeline_name=" + this.pipeline_selected;
+          const options = {
+            method: 'GET',
+            headers: {
+              'Authorization': 'Token ' + localStorage.getItem("authorization_token")
+            },
+            xhrFields: {
+              withCredentials: true
+            },
+            url,
+          };
+          axios(options).catch(error => {
+            console.log(error);
+            this.results = [];
+          }).then(request => {
+            this.results = request.data;
+          });
+        } else {
+          this.results = [];
+        }
+      },
       checkUserLoadedType (name) {
         this.pipeline_selected = name;
         if (this.loaded_pipelines_names.includes(name)) {
@@ -229,7 +274,7 @@
         }
       },
       load_pipelines_types() {
-        let url = api_url + "pipelines/";
+        let url = api_url + "get/pipelines";
         const options = {
           method: 'GET',
           headers: {
@@ -247,7 +292,7 @@
         });
       },
       load_users_pipelines() {
-        let url = api_url + "user_pipelines/";
+        let url = api_url + "user_pipelines";
         const options = {
           method: 'GET',
           headers: {
@@ -265,33 +310,9 @@
           this.pipeline_selected = this.rename_new_name;
         });
       },
-      save_users_pipelines: _.debounce(function () {
-        this.saved_state = false;
-        let url = api_url + "user_pipelines/";
-        const options = {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Token ' + localStorage.getItem("authorization_token")
-          },
-          xhrFields: {
-            withCredentials: true
-          },
-          url,
-          data: {
-            pipeline_name: this.pipeline_selected,
-            parameters: this.loaded_pipeline.parameters,
-          }
-        };
-        axios(options).catch(error => {
-          console.log(error);
-        }).then(() => {
-          this.saved_state = true;
-        })}, 500
-      ),
       delete_pipeline () {
         this.delete_dialog = false;
-
-        let url = api_url + "user_pipelines/";
+        let url = api_url + "user_pipelines/delete?pipeline_name=" + this.pipeline_selected;
         const options = {
           method: 'DELETE',
           headers: {
@@ -301,9 +322,6 @@
             withCredentials: true
           },
           url,
-          data: {
-            pipeline_name: this.pipeline_selected
-          }
         };
         axios(options).catch(error => {
           console.log(error);
@@ -388,9 +406,6 @@
               name: ''
             };
           }
-          if ("parameters" in this.loaded_pipeline) {
-            this.save_users_pipelines()
-          }
         }
       },
     },
@@ -402,6 +417,7 @@
       setInterval(() => {
         if (this.pipeline_selected !== '') {
           this.update_logs();
+          this.update_results();
           this.update_button_state();
         }
       } , 2500);

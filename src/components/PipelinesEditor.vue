@@ -79,8 +79,7 @@
                             v-if="Object.keys(loaded_pipeline.parameters).includes('performance_indicators')"
                             :pipeline_name="pipeline_selected" />
                     <MachineLearning
-                            <!--v-if="Object.keys(loaded_pipeline.parameters).includes('machine_learning')"-->
-                            v-if="false"
+                            v-if="Object.keys(loaded_pipeline.parameters).includes('machine_learning')"
                             :pipeline_name="pipeline_selected" />
                 </v-card-text>
             </v-card>

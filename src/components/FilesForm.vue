@@ -7,7 +7,6 @@
                     <v-icon large class="right">fa-database</v-icon>
                 </h4>
             </li>
-            {{ this.selected_elements }}
             <li>
                 <v-data-table :items="elements" :headers="table_headers"
                               select-all item-key="name">
