@@ -8,7 +8,7 @@ export default {
     data () {
       return {
         options: {
-          url: api_url + "store/data_files/audio/aif",
+          url: api_url + "store/input_data/audio/aif",
           headers: {
             Authorization: "Token " + localStorage.getItem("authorization_token"),
           },

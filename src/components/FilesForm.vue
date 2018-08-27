@@ -34,7 +34,7 @@
 
 <script>
   import axios from 'axios';
-  import { api_url } from "../config";
+  import {api_url} from "../config";
   import _ from 'lodash';
 
   export default {
@@ -42,6 +42,7 @@
       return {
         elements: [],
         selected: {},
+        can_save: false,
       };
     },
     methods: {
@@ -66,6 +67,7 @@
           });
           this.elements = elements;
           this.selected = selected;
+          this.can_save = true;
         })
       },
       options: url => {
@@ -88,29 +90,30 @@
             return "text";
         }
       },
-        save: _.debounce(function () {
-          this.saved_state = false;
-          let url = api_url + "user_pipelines/save/" + this.scope + "?pipeline_name=" + this.pipeline_name;
-          const options = {
-            method: 'POST',
-            headers: {
-              'Authorization': 'Token ' + localStorage.getItem("authorization_token")
-            },
-            xhrFields: {
-              withCredentials: true
-            },
-            url,
-            data: {
-              value: this.selected_elements,
-            }
-          };
-          axios(options).catch(error => {
-            console.log(error);
-          }).then(() => {
-            this.saved_state = true;
-          })}, 500
-        ),
-      },
+      save: _.debounce(function () {
+          if (this.can_save) {
+            this.saved_state = false;
+            let url = api_url + "user_pipelines/save/" + this.scope + "?pipeline_name=" + this.pipeline_name;
+            const options = {
+              method: 'POST',
+              headers: {
+                'Authorization': 'Token ' + localStorage.getItem("authorization_token")
+              },
+              xhrFields: {
+                withCredentials: true
+              },
+              url,
+              data: {
+                value: this.selected_elements,
+              }
+            };
+            axios(options).catch(error => {
+              console.log(error);
+            })
+          }
+        }, 500
+      ),
+    },
     mounted() {
       let url = api_url + "get/" + this.scope + "?pipeline_name=" + this.pipeline_name;
       axios(this.options(url)).catch(error => {
@@ -156,18 +159,20 @@
             value: 'owner',
           }]
       },
-      alert_message () {
+      alert_message() {
         if (this.scope_name === undefined) {
           return [];
         }
         return 'There are no ' + this.scope_name + ' available for you'
       },
-      selected_elements () {
+      selected_elements() {
         let selected = Object.entries(this.selected).filter(([k, v]) => {
           if (v) {
             return k;
           }
-        }).map(e => {return e[0]});
+        }).map(e => {
+          return e[0]
+        });
         return Object.values(this.elements).filter(v => {
           if (selected.indexOf(v.name) > -1) {
             return v;
@@ -178,11 +183,11 @@
     watch: {
       selected_elements: {
         deep: true,
-        handler () {
+        handler() {
           this.save()
         }
       },
-      pipeline_name () {
+      pipeline_name() {
         this.load_user_selections(this.elements);
       }
     }

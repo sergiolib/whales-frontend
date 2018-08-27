@@ -115,7 +115,7 @@
             this.elements.forEach(e => {
               if (e.name === pipeline_element.method) {
                 e.parameters = Object.assign(pipeline_element.parameters, e.parameters);
-                e['value'] = true;
+                this.$set(e, 'value', true);
               }
             })
           });

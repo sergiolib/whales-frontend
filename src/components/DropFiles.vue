@@ -18,7 +18,7 @@
                 <v-flex>
                     <v-card>
                         <v-list two-line subheader>
-                            <v-subheader inset>Files uploading</v-subheader>
+                            <v-subheader inset v-if="props.files.filter(elem => elem.status !== 'success').length > 0">Files uploading</v-subheader>
 
                             <v-list-tile
                                     v-for="item in props.files"
