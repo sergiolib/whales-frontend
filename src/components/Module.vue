@@ -16,14 +16,14 @@
                     <v-card-text>
                         <p v-for="(value, parameter) in element.parameters" :key="parameter">
                             <input v-if="value.type === 'int'" type="number" :name="parameter" :id="parameter"
-                                   v-model="value.value"/>
+                                   v-model="value.value" />
                             <input v-else-if="value.type === 'float'" type="number" step=0.1 :name="parameter"
-                                   :id="parameter" v-model="value.value"/>
+                                   :id="parameter" v-model="value.value" />
                             <input v-else-if="value.type === 'bool'" type="checkbox" :value="parameter"
-                                   :name="parameter" :id="parameter" v-model="value.value"/>
-                            <v-select v-else-if="value.options !== null" :items="value.options"
+                                   :name="parameter" :id="parameter" v-model="value.value" />
+                            <v-select v-else-if="value.options.length > 0" :items="value.options"
                                       v-model="value.value"></v-select>
-                            <input v-else :name="parameter" :id="parameter" v-model="value.value"/>
+                            <input v-else :name="parameter" :id="parameter" v-model="value.value" />
                             <label :for="parameter">{{ parameter }}</label>
                         </p>
                     </v-card-text>

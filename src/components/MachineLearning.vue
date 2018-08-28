@@ -27,15 +27,15 @@
                     <v-card-title><h4>Parameters</h4></v-card-title>
                     <v-card-text v-for="(value, parameter) in elements[elemIndex].parameters"
                                  :key="parameter">
-                        <input v-model="elements[elemIndex].parameters[parameter].value"
-                               :type="param_type(value.type)" :id="parameter" :name="parameter"
-                               v-if="value.options === null"/>
-                        <v-select v-model="elements[elemIndex].parameters[parameter].value" type="text"
-                                  :id="parameter" :items="value.options" :name="parameter"
-                                  v-else-if="value.type === 'str'"/>
-                        <input v-model="elements[elemIndex].parameters[parameter].value" type="range"
-                               :id="parameter" step=1 :min="value.options[0]" :max="value.options[1]" :name="parameter"
-                               v-else-if="value.type === 'int'"/>
+                        <input v-if="value.type === 'int'" type="number" :name="parameter" :id="parameter"
+                               v-model="value.value" />
+                        <input v-else-if="value.type === 'float'" type="number" step=0.1 :name="parameter"
+                               :id="parameter" v-model="value.value" />
+                        <input v-else-if="value.type === 'bool'" type="checkbox" :value="parameter"
+                               :name="parameter" :id="parameter" v-model="value.value" />
+                        <v-select v-else-if="value.options.length > 0" :items="value.options"
+                                  v-model="value.value"></v-select>
+                        <input v-else :name="parameter" :id="parameter" v-model="value.value" />
                         <label :for="parameter">{{ parameter }}</label>
                     </v-card-text>
                 </v-card>

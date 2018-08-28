@@ -36,15 +36,17 @@
                                 <p>Start the pipeline</p>
                             </v-flex>
                             <v-flex class="text-xs-center" v-else-if="process_state === 1">
-                                <v-btn fab color="alert" dark large><v-icon x-large circle>fa-stop</v-icon></v-btn>
+                                <v-btn fab color="alert"
+                                       @click="launch_pipeline" dark large><v-icon x-large circle>fa-stop</v-icon></v-btn>
                                 <p>The pipeline is running...</p>
                             </v-flex>
                             <v-flex class="text-xs-center" v-else-if="process_state === 2">
-                                <v-btn fab color="warning" dark large><v-icon x-large circle>fa-exclamation-triangle</v-icon></v-btn>
-                                <p>The pipeline suddenly stopped!</p>
+                                <v-btn fab color="warning" dark large
+                                       @click="launch_pipeline"><v-icon x-large circle>fa-exclamation-triangle</v-icon></v-btn>
+                                <p>{{ associated_text }}</p>
                             </v-flex>
                             <v-flex class="text-xs-center" v-else-if="process_state === 3">
-                                <v-btn fab color="green" dark large><v-icon x-large circle>fa-check-double</v-icon></v-btn>
+                                <v-btn fab color="green" dark large @click="launch_pipeline"><v-icon x-large circle>fa-check-double</v-icon></v-btn>
                                 <p>The pipeline has finished. Check its results below.</p>
                             </v-flex>
                         </v-card>
@@ -62,7 +64,7 @@
                                     >
                                         <div slot="header">{{ item.name }}</div>
                                         <v-card>
-                                            <v-card-text>{{ item.content }}</v-card-text>
+                                            <v-card-text><span v-html="item.content"></span></v-card-text>
                                         </v-card>
                                     </v-expansion-panel-content>
                                 </v-expansion-panel>
@@ -177,6 +179,7 @@
         process_state: 0,  // 0: not started, 1: started and running ok, 2: started and finished in error, 3: started and finished ok
         logs: [],
         results: [],
+        associated_text: ""  // text coming from process api
       };
     },
     computed: {
@@ -198,7 +201,7 @@
         axios(options_inner(this.pipeline_selected)).catch(error => {
           console.log(error);
         }).then((response) => {
-          switch (response.data) {
+          switch (response.data[0]) {
             case 0:
               // READY
               this.process_state = 0;
@@ -222,6 +225,7 @@
               this.process_state = 0;
               break;
           }
+          this.associated_text = response.data[1];
         });
       },
       update_logs() {
@@ -366,7 +370,7 @@
         });
       },
       launch_pipeline () {
-        let url = api_url + "user_pipelines/launch";
+        let url = api_url + "user_pipelines/process";
         const options = {
           method: 'POST',
           headers: {
@@ -421,9 +425,14 @@
         setInterval(() => {
           if (this.pipeline_selected.length > 0 && this.process_state === 1) {
             this.update_logs();
-            this.update_button_state();
           }
         } , 500);
+
+        setInterval(() => {
+          if (this.pipeline_selected.length > 0) {
+            this.update_button_state();
+          }
+        }, 1000);
       });
     },
   };
