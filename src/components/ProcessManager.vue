@@ -11,10 +11,14 @@
                     </v-card-text>
                     <v-card-text>
                         <v-select
-                                :items="loaded_pipelines_names"
+                                :items="loaded_pipelines"
+                                item-text="display_name"
+                                item-value="name"
                                 box
                                 label="Select pipeline to manage"
                                 @change="checkUserLoadedType"
+                                return-object
+                                single-line
                         ></v-select>
                     </v-card-text>
                 </v-card>
@@ -274,7 +278,8 @@
           this.results = [];
         }
       },
-      checkUserLoadedType (name) {
+      checkUserLoadedType (item) {
+        let name = item.name;
         this.pipeline_selected = name;
         if (this.loaded_pipelines_names.includes(name)) {
           this.selected_pipeline_type = this.loaded_pipeline.type;
@@ -298,6 +303,7 @@
           console.log(error);
         }).then(request => {
           this.loaded_pipelines = request.data;
+          this.loaded_pipelines.map(elem => Object.assign(elem, {display_name: elem.name + " (" + elem.type + ")"}))
           this.pipeline_selected = this.rename_new_name;
         });
       },

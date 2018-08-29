@@ -31,7 +31,8 @@
                               v-model="new_pipeline_name" style="padding-top: 30px"></v-text-field>
                 <v-card-text class="text-xs-right">
                     <v-btn large :disabled="selected_pipeline_type === '' || new_pipeline_name.length === 0"
-                           @click="create_pipeline">Create pipeline</v-btn>
+                           @click="create_pipeline">Create pipeline
+                    </v-btn>
                 </v-card-text>
             </v-card>
         </v-flex>
@@ -57,30 +58,52 @@
                                    @click="save_parameters"><v-icon class="text-xs-right">fa-hourglass-end</v-icon></v-btn>
                         </v-fab-transition>-->
                     </v-layout>
-                    <p v-for="(param, param_name) in loaded_pipeline.parameters" :key="param_name" v-if="['str', 'bool', 'int'].includes(param.type)">
-                        <input v-if="param.type === 'str'" :id="param_name" v-model="param.value" :oninput="save_parameters(param_name)" />
-                        <input v-else-if="param.type === 'bool'" :id="param_name" type="checkbox" v-model="param.value" :oninput="save_parameters(param_name)" />
-                        <input v-else-if="param.type === 'int'" :id="param_name" type="number" v-model="param.value" :oninput="save_parameters(param_name)" />
+                    <p v-for="(param, param_name) in loaded_pipeline.parameters" :key="param_name"
+                       v-if="['str', 'bool', 'int'].includes(param.type)">
+                        <input v-if="param.type === 'str'" :id="param_name" v-model="param.value"
+                               :oninput="save_parameters(param_name)"/>
+                        <input v-else-if="param.type === 'bool'" :id="param_name" type="checkbox" v-model="param.value"
+                               :oninput="save_parameters(param_name)"/>
+                        <input v-else-if="param.type === 'int'" :id="param_name" type="number" v-model="param.value"
+                               :oninput="save_parameters(param_name)"/>
                         <label :for="param_name">{{ param_name }}</label>
                     </p>
                     <FilesForm :pipeline_name="pipeline_selected"
                                v-if="Object.keys(loaded_pipeline.parameters).includes('input_data')"
-                               scope_name="Data files" scope="input_data" />
+                               scope_name="Data files" scope="input_data"/>
                     <FilesForm :pipeline_name="pipeline_selected"
                                v-if="Object.keys(loaded_pipeline.parameters).includes('input_labels')"
-                               scope_name="Labels files" scope="input_labels" />
+                               scope_name="Labels files" scope="input_labels"/>
                     <Module scope="pre_processing" scope_name="Pre processing" icon="transform"
-                            v-if="Object.keys(loaded_pipeline.parameters).includes('pre_processing')"
-                            :pipeline_name="pipeline_selected" />
+                            v-if="Object.keys(loaded_pipeline.parameters).includes('pre_processing') && selected_pipeline_type.toLowerCase().includes('training')"
+                            :pipeline_name="pipeline_selected"/>
                     <Module scope="features_extractors" scope_name="Features extractors" icon="equalizer"
-                            v-if="Object.keys(loaded_pipeline.parameters).includes('features_extractors')"
-                            :pipeline_name="pipeline_selected" />
+                            v-if="Object.keys(loaded_pipeline.parameters).includes('features_extractors') && selected_pipeline_type.toLowerCase().includes('training')"
+                            :pipeline_name="pipeline_selected"/>
                     <Module scope="performance_indicators" scope_name="Performance indicators" icon="art_track"
                             v-if="Object.keys(loaded_pipeline.parameters).includes('performance_indicators')"
-                            :pipeline_name="pipeline_selected" />
+                            :pipeline_name="pipeline_selected"/>
                     <MachineLearning
-                            v-if="Object.keys(loaded_pipeline.parameters).includes('machine_learning')"
-                            :pipeline_name="pipeline_selected" />
+                            v-if="Object.keys(loaded_pipeline.parameters).includes('machine_learning') && selected_pipeline_type.toLowerCase().includes('training')"
+                            :pipeline_name="pipeline_selected"/>
+                    <div
+                            v-else-if="Object.keys(loaded_pipeline.parameters).includes('machine_learning')">
+                        <ul class="collection with-header">
+                            <li class="collection-header">
+                                <h4>
+                                    Trained model
+                                    <v-icon large class="right">lightbulb_outline</v-icon>
+                                </h4>
+                            </li>
+                            <v-select
+                                    :items="trained_ml_models"
+                                    box
+                                    label="Trained pipeline to use"
+                                    v-model="loaded_pipeline.parameters['trained_model_pipeline'].value"
+                                    @change="save_parameters('trained_model_pipeline')"
+                            ></v-select>
+                        </ul>
+                    </div>
                 </v-card-text>
             </v-card>
         </v-flex>
@@ -120,16 +143,18 @@
         pipeline_selected: "",  // First selector model: name of pipeline (member of loaded_pipelines_names) or create_option
         selected_pipeline_type: "",  // Second selector model: changeable only if pipeline_selected === create_option
         new_pipeline_name: "",  // When creating a new pipeline, this is the name the used gives to it
+        trained_ml_models: [],
+        selected_ml_model: "",
       };
     },
     computed: {
-      pipelines_types_description () {
+      pipelines_types_description() {
         return this.pipelines_types.map(elem => elem.description);
       },
-      loaded_pipelines_names () {
+      loaded_pipelines_names() {
         return this.loaded_pipelines.map(elem => elem.name);
       },
-      pipelines_selector_items () {
+      pipelines_selector_items() {
         return insert(insert(this.loaded_pipelines_names, 0, this.create_option), 1, '---')
       },
       loaded_pipeline() {
@@ -137,7 +162,7 @@
       },
     },
     methods: {
-      checkUserLoadedType (name) {
+      checkUserLoadedType(name) {
         if (this.loaded_pipelines_names.includes(name)) {
           this.selected_pipeline_type = this.loaded_pipeline.type;
         } else {
@@ -162,7 +187,7 @@
           this.pipelines_types = request.data;
         });
       },
-      load_users_pipelines() {
+      load_users_pipelines: function () {
         let url = api_url + "user_pipelines";
         const options = {
           method: 'GET',
@@ -178,6 +203,34 @@
           console.log(error);
         }).then(request => {
           this.loaded_pipelines = request.data;
+          let training_pipelines = this.loaded_pipelines.filter(elem => {
+            return elem.type.toLowerCase().includes("training");
+          });
+          let trained_models = [];
+          training_pipelines.forEach(elem => {
+            let url = api_url + "user_pipelines/process?pipeline_name=" + elem.name;
+            const options = {
+              method: 'GET',
+              headers: {
+                'Authorization': 'Token ' + localStorage.getItem("authorization_token")
+              },
+              xhrFields: {
+                withCredentials: true
+              },
+              url,
+            };
+            axios(options).catch(error => {
+              console.log(error);
+            }).then(response => {
+                if (response.data[0] === 3) {
+                  trained_models.push(elem.name);
+                }
+                return trained_models;
+            }).then(trained_models => {
+              this.trained_ml_models = trained_models
+              this.trained_ml_models.push('')
+            })
+          })
         });
       },
       create_pipeline() {
@@ -209,34 +262,33 @@
         });
       },
       save_parameters: _.debounce(function (k) {
-        this.saved_state = false;
-        let url = api_url + "user_pipelines/save/" + k;
-        const options = {
-          method: 'POST',
-          headers: {
-            'Authorization': 'Token ' + localStorage.getItem("authorization_token")
-          },
-          xhrFields: {
-            withCredentials: true
-          },
-          url,
-          data: {
-            pipeline_name: this.pipeline_selected,
-            value: this.loaded_pipeline.parameters[k].value,
-            type: this.loaded_pipeline.parameters[k].type,
-          }
-        };
-        axios(options).catch(error => {
-          console.log(error);
-        }).then(() => {
-          this.saved_state = true;
-        })
+          this.saved_state = false;
+          let url = api_url + "user_pipelines/save/" + k + "?pipeline_name=" + this.pipeline_selected;
+          const options = {
+            method: 'POST',
+            headers: {
+              'Authorization': 'Token ' + localStorage.getItem("authorization_token")
+            },
+            xhrFields: {
+              withCredentials: true
+            },
+            url,
+            data: {
+              value: this.loaded_pipeline.parameters[k].value,
+              //type: this.loaded_pipeline.parameters[k].type,
+            }
+          };
+          axios(options).catch(error => {
+            console.log(error);
+          }).then(() => {
+            this.saved_state = true;
+          })
         }, 500
       ),
     },
-    created () {
+    created() {
       this.load_pipelines_types();
       this.load_users_pipelines();
-    }
+    },
   };
 </script>
