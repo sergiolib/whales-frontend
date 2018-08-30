@@ -41,7 +41,7 @@
                             </v-flex>
                             <v-flex class="text-xs-center" v-else-if="process_state === 1">
                                 <v-btn fab color="alert"
-                                       @click="launch_pipeline" dark large><v-icon x-large circle>fa-stop</v-icon></v-btn>
+                                       @click="launch_pipeline" dark large><v-icon x-large circle disabled>fa-stop</v-icon></v-btn>
                                 <p>The pipeline is running...</p>
                             </v-flex>
                             <v-flex class="text-xs-center" v-else-if="process_state === 2">

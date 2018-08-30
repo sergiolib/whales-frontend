@@ -8,12 +8,17 @@
                 </h4>
             </li>
             <li>
-                <v-data-table :items="elements" :headers="table_headers"
-                              select-all item-key="name">
+                <v-data-table
+                        :items="elements"
+                        :headers="table_headers"
+                        select-all
+                        item-key="name"
+                        v-model="selected"
+                >
                     <template slot="items" slot-scope="props">
                         <td>
                             <v-checkbox
-                                    v-model="selected[props.item.name]"
+                                    v-model="props.selected"
                                     id="props.name"
                                     primary
                             ></v-checkbox>
@@ -41,7 +46,7 @@
     data() {
       return {
         elements: [],
-        selected: {},
+        selected: [],
         can_save: false,
       };
     },
@@ -61,12 +66,8 @@
         axios(options).catch(error => {
           console.log(error);
         }).then((response) => {
-          let selected = {};
-          response.data.value.forEach(elem => {
-            selected[elem.name] = true;
-          });
           this.elements = elements;
-          this.selected = selected;
+          this.selected = response.data.value;
           this.can_save = true;
         })
       },
@@ -104,7 +105,7 @@
               },
               url,
               data: {
-                value: this.selected_elements,
+                value: this.selected,
               }
             };
             axios(options).catch(error => {
@@ -165,23 +166,9 @@
         }
         return 'There are no ' + this.scope_name + ' available for you'
       },
-      selected_elements() {
-        let selected = Object.entries(this.selected).filter(([k, v]) => {
-          if (v) {
-            return k;
-          }
-        }).map(e => {
-          return e[0]
-        });
-        return Object.values(this.elements).filter(v => {
-          if (selected.indexOf(v.name) > -1) {
-            return v;
-          }
-        })
-      }
     },
     watch: {
-      selected_elements: {
+      selected: {
         deep: true,
         handler() {
           this.save()

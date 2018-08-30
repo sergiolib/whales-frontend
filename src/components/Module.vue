@@ -94,7 +94,6 @@
         }, 500
       ),
       reload_users_parameters () {
-        this.can_save = false;
         let url = api_url + "user_pipelines/load/" + this.scope + "?pipeline_name=" + this.pipeline_name;
         const options = {
           method: 'GET',
@@ -114,12 +113,11 @@
           user_response.forEach(pipeline_element => {
             this.elements.forEach(e => {
               if (e.name === pipeline_element.method) {
-                e.parameters = Object.assign(pipeline_element.parameters, e.parameters);
+                e.parameters = Object.assign(pipeline_element.parameters, );
                 this.$set(e, 'value', true);
               }
             })
           });
-          this.can_save = true;
         })
       }
     },
@@ -142,9 +140,9 @@
         return request.data;
       }).then(elements => {
         // Get users settings
-        this.can_save = false;
         this.elements = elements;
-        this.reload_users_parameters()
+        this.reload_users_parameters();
+        this.can_save = true;
       })
     },
     watch: {
