@@ -3,7 +3,7 @@ import Router from 'vue-router';
 import FrontPage from './components/FrontPage.vue';
 import DataManagement from './components/DataManagement.vue';
 import PipelinesEditor from './components/PipelinesEditor.vue';
-import ProcessManager from './components/ProcessManager.vue';
+import PipelinesManager from './components/PipelinesManager.vue';
 
 Vue.use(Router);
 
@@ -27,7 +27,7 @@ let router = new Router({
       }
     },
     {
-      path: '/pipelines',
+      path: '/editor',
       name: 'Pipelines Editor',
       component: PipelinesEditor,
       meta: {
@@ -35,9 +35,9 @@ let router = new Router({
       }
     },
     {
-      path: '/processes',
-      name: 'Process Manager',
-      component: ProcessManager,
+      path: '/manager',
+      name: 'Pipelines Manager',
+      component: PipelinesManager,
       meta: {
         requiresAuth: true
       }

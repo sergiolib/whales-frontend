@@ -33,12 +33,12 @@ export default {
       },
       {
         name: 'Pipelines Editor',
-        route: '/pipelines',
+        route: '/editor',
         auth_only: true,
       },
       {
-        name: 'Processes Manager',
-        route: '/processes',
+        name: 'Pipelines Manager',
+        route: '/manager',
         auth_only: true,
       },
     ],

@@ -152,7 +152,7 @@
         return this.pipelines_types.map(elem => elem.description);
       },
       loaded_pipelines_names() {
-        return this.loaded_pipelines.map(elem => elem.name);
+        return this.loaded_pipelines.filter(elem => elem.owner === localStorage.getItem("email")).map(elem => elem.name);
       },
       pipelines_selector_items() {
         return insert(insert(this.loaded_pipelines_names, 0, this.create_option), 1, '---')
