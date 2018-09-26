@@ -25,8 +25,7 @@ import 'materialize-css';
 
 export default {
   data() {
-    return {
-    };
+    return {};
   },
   methods: {
     login () {

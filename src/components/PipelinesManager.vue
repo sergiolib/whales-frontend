@@ -192,7 +192,6 @@
             return {
                 pipelines_types: [],  // Array of pipelines types from API
                 loaded_pipelines: [],  // Array of pipelines existing in DB
-                loaded_pipelines: [],  // Array of pipelines existing in DB
                 pipeline_selected: "",  // First selector model: name of pipeline (member of loaded_pipelines_names)
                 selected_pipeline_type: "",  // Second selector model: changeable only if pipeline_selected === create_option
                 new_pipeline_name: "",  // When creating a new pipeline, this is the name the used gives to it
