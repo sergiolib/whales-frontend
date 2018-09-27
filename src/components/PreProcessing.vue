@@ -3,8 +3,8 @@
         <ul class="collection with-header">
             <li class="collection-header">
                 <h4>
-                    {{ scope_name }}
-                    <v-icon large class="right">{{ icon }}</v-icon>
+                    Pre processing
+                    <v-icon large class="right">transform</v-icon>
                 </h4>
             </li>
             <li class="collection-item" v-for="element in elements" :key="element.description">
@@ -47,15 +47,6 @@
       }
     },
     props: {
-      scope: {
-        type: String,
-      },
-      scope_name: {
-        type: String,
-      },
-      icon: {
-        type: String,
-      },
       pipeline_name: {
         type: String,
         required: true,
@@ -64,7 +55,7 @@
     methods: {
       save: _.debounce(function () {
           if (this.can_save) {
-              let url = api_url + "user_pipelines/save/" + this.scope + "?pipeline_name=" + this.pipeline_name;
+              let url = api_url + "user_pipelines/save/pre_processing?pipeline_name=" + this.pipeline_name;
               let saved_elements = [];
               this.elements.forEach(element => {
                 if (element.value === true) {
@@ -94,7 +85,7 @@
         }, 500
       ),
       reload_users_parameters () {
-        let url = api_url + "user_pipelines/load/" + this.scope + "?pipeline_name=" + this.pipeline_name;
+        let url = api_url + "user_pipelines/load/pre_processing?pipeline_name=" + this.pipeline_name;
         const options = {
           method: 'GET',
           headers: {
@@ -122,7 +113,7 @@
       }
     },
     mounted() {
-      let url = api_url + "get/" + this.scope + "?pipeline_name=" + this.pipeline_name;
+      let url = api_url + "get/pre_processing?pipeline_name=" + this.pipeline_name;
       const options = {
         method: 'GET',
         headers: {

@@ -74,13 +74,13 @@
                     <FilesForm :pipeline_name="pipeline_selected"
                                v-if="Object.keys(loaded_pipeline.parameters).includes('input_labels')"
                                scope_name="Labels files" scope="input_labels"/>
-                    <Module scope="pre_processing" scope_name="Pre processing" icon="transform"
+                    <PreProcessing
                             v-if="Object.keys(loaded_pipeline.parameters).includes('pre_processing') && selected_pipeline_type.toLowerCase().includes('training')"
                             :pipeline_name="pipeline_selected"/>
-                    <Module scope="features_extractors" scope_name="Features extractors" icon="equalizer"
+                    <FeaturesExtractors
                             v-if="Object.keys(loaded_pipeline.parameters).includes('features_extractors') && selected_pipeline_type.toLowerCase().includes('training')"
                             :pipeline_name="pipeline_selected"/>
-                    <Module scope="performance_indicators" scope_name="Performance indicators" icon="art_track"
+                    <PerformanceIndicators
                             v-if="Object.keys(loaded_pipeline.parameters).includes('performance_indicators')"
                             :pipeline_name="pipeline_selected"/>
                     <MachineLearning
@@ -113,7 +113,9 @@
 <script>
   import axios from 'axios';
   import {api_url} from "../config";
-  import Module from './Module.vue';
+  import FeaturesExtractors from './FeaturesExtractors.vue';
+  import PerformanceIndicators from './PerformanceIndicators.vue';
+  import PreProcessing from './PreProcessing.vue';
   import MachineLearning from './MachineLearning';
   import 'materialize-css'; // It installs the JS asset only
   import 'materialize-css/dist/css/materialize.min.css';
@@ -131,7 +133,9 @@
 
   export default {
     components: {
-      Module,
+      PreProcessing,
+      FeaturesExtractors,
+      PerformanceIndicators,
       MachineLearning,
       FilesForm,
     },
