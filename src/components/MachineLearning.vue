@@ -17,7 +17,7 @@
             <li class="collection-item" v-if="selected_type !== ''">
                 <label>
                     <v-select type="checkbox"
-                              :items="elements.map(elem => elem.description)"
+                              :items="elements.filter(elem => selected_type === elem.type).map(elem => elem.description)"
                               v-model="selected_model"/>
                     <span>Method</span>
                 </label>
