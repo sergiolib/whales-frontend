@@ -260,9 +260,8 @@
         }).then(() => {
           this.load_users_pipelines();
           this.$forceUpdate();
-          this.pipeline_selected = this.new_pipeline_name;
           this.new_pipeline_name = '';
-          this.selected_pipeline_type = type;
+          this.pipeline_selected = this.new_pipeline_name;
         });
       },
       save_parameters: _.debounce(function (k) {
