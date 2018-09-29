@@ -9,9 +9,9 @@
                     <h1>Welcome</h1>
                     <h2>This is the whale detector application</h2>
                     <p>This application allows you to load audio files and detect whale sounds within.</p>
-                    <p>In order to start, please login by clicking the incognito guy at the top right.</p>
+                    <p v-if="!is_logged_in">In order to start, please login by clicking the login button at the top right.</p>
 
-                    <h2>Last public pipelines created</h2>
+                    <h2 v-if="last_pipelines.length > 0">Last public pipelines created</h2>
                     <ol>
                         <li v-for="p in last_pipelines" :key="p.name + ' ' +  p.owner">{{ p.name }} owned by {{ p.owner }} created on {{ p.created_on }}</li>
                     </ol>
@@ -43,6 +43,11 @@
             }).then(request => {
                 this.last_pipelines = request.data;
             });
+        },
+        computed: {
+            is_logged_in() {
+                return this.$store.state.isLoggedIn;
+            }
         }
     }
 </script>
