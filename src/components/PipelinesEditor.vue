@@ -9,7 +9,9 @@
             </v-card-text>
             <v-card-text>
                 <v-select
-                        :items="pipelines_selector_items"
+                        :items="loaded_pipelines"
+                        item-text="display_name"
+                        item-value="name"
                         box
                         label="Create new pipeline or select to modify"
                         v-model="pipeline_selected"
@@ -36,7 +38,7 @@
                 </v-card-text>
             </v-card>
         </v-flex>
-        <v-flex xs12 sm8 offset-sm2 v-else-if="loaded_pipelines_names.includes(pipeline_selected)">
+        <v-flex xs12 sm8 offset-sm2 v-else-if="loaded_pipelines.map(elem => elem.name).includes(pipeline_selected)">
             <v-card>
                 <v-card-text>
                     <v-layout>
@@ -155,19 +157,13 @@
       pipelines_types_description() {
         return this.pipelines_types.map(elem => elem.description);
       },
-      loaded_pipelines_names() {
-        return this.loaded_pipelines.filter(elem => elem.owner === localStorage.getItem("email")).map(elem => elem.name);
-      },
-      pipelines_selector_items() {
-        return insert(insert(this.loaded_pipelines_names, 0, this.create_option), 1, '---')
-      },
       loaded_pipeline() {
         return this.loaded_pipelines.find(pip => pip.name === this.pipeline_selected);
       },
     },
     methods: {
       checkUserLoadedType(name) {
-        if (this.loaded_pipelines_names.includes(name)) {
+        if (this.loaded_pipelines.map(elem => elem.name).includes(name)) {
           this.selected_pipeline_type = this.loaded_pipeline.type;
         } else {
           this.selected_pipeline_type = '';
@@ -207,6 +203,9 @@
           console.log(error);
         }).then(request => {
           this.loaded_pipelines = request.data;
+          this.loaded_pipelines.map(elem => Object.assign(elem, {display_name: elem.name + " (" + elem.owner + ")"}));
+          this.loaded_pipelines.unshift({display_name: "---", name: "---"});
+          this.loaded_pipelines.unshift({display_name: this.create_option, name: this.create_option});
           let training_pipelines = this.loaded_pipelines.filter(elem => {
             return elem.type.toLowerCase().includes("training");
           });
