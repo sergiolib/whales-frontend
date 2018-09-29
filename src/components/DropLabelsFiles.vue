@@ -14,7 +14,7 @@ export default {
           },
         },
         files_icon: "fa-file-code",
-        dz_message: "Drop labels files (csv or txt) here or click"
+        dz_message: "Drop labels files (csv) here or click"
       };
     },
 };
