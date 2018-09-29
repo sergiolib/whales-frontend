@@ -212,9 +212,6 @@
             loaded_pipelines_names() {
                 return this.loaded_pipelines.map(elem => elem.name);
             },
-            pipelines_selector_items() {
-                return insert(insert(this.loaded_pipelines_names, 0, this.create_option), 1, '---')
-            },
             loaded_pipeline() {
                 return this.loaded_pipelines.find(pip => pip.name === this.pipeline_selected);
             },
