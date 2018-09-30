@@ -41,27 +41,27 @@
                             <v-flex class="text-xs-center" v-if="process_state === 0">
                                 <v-btn fab color="blue" dark large>
                                     <v-icon x-large circle
-                                            @click.native="launch_pipeline">fa-play
+                                            @click="launch_pipeline">fa-play
                                     </v-icon>
                                 </v-btn>
                                 <p>Start the pipeline</p>
                             </v-flex>
                             <v-flex class="text-xs-center" v-else-if="process_state === 1">
                                 <v-btn fab color="alert"
-                                       @click.native="launch_pipeline" dark large>
+                                       @click="launch_pipeline" dark large>
                                     <v-icon x-large circle disabled>fa-stop</v-icon>
                                 </v-btn>
                                 <p>The pipeline is running...</p>
                             </v-flex>
                             <v-flex class="text-xs-center" v-else-if="process_state === 2">
                                 <v-btn fab color="warning" dark large
-                                       @click.native="launch_pipeline">
+                                       @click="launch_pipeline">
                                     <v-icon x-large circle>fa-exclamation-triangle</v-icon>
                                 </v-btn>
                                 <p>{{ associated_text }}</p>
                             </v-flex>
                             <v-flex class="text-xs-center" v-else-if="process_state === 3">
-                                <v-btn fab color="green" dark large @click.native="launch_pipeline">
+                                <v-btn fab color="green" dark large @click="launch_pipeline">
                                     <v-icon x-large circle>fa-check-double</v-icon>
                                 </v-btn>
                                 <p>The pipeline has finished. Check its results below.</p>
