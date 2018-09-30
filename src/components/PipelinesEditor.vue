@@ -204,8 +204,8 @@
         }).then(request => {
           this.loaded_pipelines = request.data;
           this.loaded_pipelines.map(elem => Object.assign(elem, {display_name: elem.name + " (" + elem.owner + ")"}));
-          this.loaded_pipelines.unshift({display_name: "---", name: "---"});
-          this.loaded_pipelines.unshift({display_name: this.create_option, name: this.create_option});
+          this.loaded_pipelines.unshift({display_name: "---", name: "---", type: ""});
+          this.loaded_pipelines.unshift({display_name: this.create_option, name: this.create_option, type: ""});
           let training_pipelines = this.loaded_pipelines.filter(elem => {
             return elem.type.toLowerCase().includes("training");
           });
@@ -230,8 +230,8 @@
                 }
                 return trained_models;
             }).then(trained_models => {
-              this.trained_ml_models = trained_models
-              this.trained_ml_models.push('')
+              this.trained_ml_models = trained_models;
+              this.trained_ml_models.push('');
             })
           })
         });
@@ -284,7 +284,7 @@
           }).then(() => {
             this.saved_state = true;
           })
-        }, 500
+        }, 3000
       ),
     },
     created() {
